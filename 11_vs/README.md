@@ -2,6 +2,7 @@
 
 Apparently
 
-	vcpkg install integrate
+	cd cmd_app1_
+	vcpkg integrate install
 
 

@@ -20,20 +20,25 @@ In Linux
     cmake --build build-linux
     cmake --build build-linux --target test
 
-In Windows (WIP)
+In Windows
 
     cmake --preset default
     cmake --build build-vs2022
     cmake --build build-vs2022 --target RUN_TESTS
 
-## Setting environment
+## Run
+
+In Linux:
+
+    build-linux/GLTFImporter ../08_assimp_junk/test_data/BoxTextured-glTF/BoxTextured.gltf
+    build-linux/GLTFImporter ~/src/glTF-Sample-Models/2.0/ABeautifulGame/glTF/ABeautifulGame.gltf
 
 In Windows:
 
-    In the Command Line (CMD)
+In the Command Line (CMD)
 
     set PROJ_DATA=vcpkg_installed/x64-windows/share/proj/
-    Debug\test_09.exe
+    Debug\test_10.exe
 
 If Visual Studio is used, then set Debugging / Environment property:
 
@@ -43,8 +48,5 @@ If Visual Studio is used, then set Debugging / Environment property:
 
 See more details
 https://learn.microsoft.com/en-us/vcpkg/users/buildsystems/cmake-integration#settings-reference
-
-VTX Tutorial Step1 (and so on)
-https://examples.vtk.org/site/Cxx/Tutorial/Tutorial_Step1/
 
 

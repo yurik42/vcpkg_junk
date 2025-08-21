@@ -16,6 +16,6 @@ int main() {
         curr *= 2;
     }
 
-    printf("total == 0x%016llx\ncurr  == 0x%016llx\n", total, curr);
+    printf("total == 0x%016zx\ncurr  == 0x%016zx\n", total, curr);
     return 0;
 }

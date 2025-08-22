@@ -110,7 +110,7 @@ public:
             std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
         std::cout << "Inserted " << rtree.size() << " points in "
-                  << insert_time.count() << " μs" << std::endl;
+                  << insert_time.count() << " mms" << std::endl;
 
         // Query operations
         Point2D query_point(10.0f, 20.0f);
@@ -124,7 +124,7 @@ public:
         for (const auto &result : knn_result) {
             float x = bg::get<0>(result.first);
             float y = bg::get<1>(result.first);
-            float distance = bg::distance(query_point, result.first);
+            float distance = float(bg::distance(query_point, result.first));
             std::cout << "  Point " << result.second << ": (" << x << ", " << y
                       << ") distance: " << distance << std::endl;
         }
@@ -163,7 +163,6 @@ public:
         std::cout << "  R-tree size: " << initial_size << " -> " << rtree.size()
                   << std::endl;
     }
-
     // Example 2: 3D Point R-tree with R* algorithm
     static void rstar3DOperations() {
         std::cout << "\n=== 3D Point R-tree with R* Algorithm ===" << std::endl;
@@ -197,7 +196,7 @@ public:
             float x = bg::get<0>(result.first);
             float y = bg::get<1>(result.first);
             float z = bg::get<2>(result.first);
-            float distance = bg::distance(query_point, result.first);
+            float distance = float(bg::distance(query_point, result.first));
             std::cout << "  " << result.second << ": (" << x << ", " << y
                       << ", " << z << ") distance: " << distance << std::endl;
         }
@@ -222,7 +221,7 @@ public:
 
         std::cout << "  Total points in box: " << count << std::endl;
     }
-
+#if 0
     // Example 3: Box R-tree for Rectangular Objects
     static void boxRTreeOperations() {
         std::cout << "\n=== Box R-tree Operations ===" << std::endl;
@@ -331,7 +330,7 @@ public:
              it != rtree.qend() && found < 3; ++it, ++found) {
             float x = bg::get<0>(it->first);
             float y = bg::get<1>(it->first);
-            float distance = bg::distance(center, it->first);
+            float distance = float(bg::distance(center, it->first));
             std::cout << "  Point " << it->second << ": (" << x << ", " << y
                       << ") distance: " << distance << std::endl;
         }
@@ -371,7 +370,7 @@ public:
         for (const auto &query_point : query_points) {
             std::vector<std::pair<float, int>> distances;
             for (const auto &point : points) {
-                float dist = bg::distance(query_point.first, point.first);
+                float dist = float(bg::distance(query_point.first, point.first));
                 distances.emplace_back(dist, point.second);
             }
             std::partial_sort(distances.begin(), distances.begin() + 5,
@@ -441,6 +440,7 @@ public:
         std::cout << "  Rebuilt with " << rtree.size() << " points"
                   << std::endl;
     }
+#endif
 };
 
 int main() {
@@ -449,12 +449,13 @@ int main() {
 
     try {
         BoostRTreeExamples::basic2DPointOperations();
+#if 0
         BoostRTreeExamples::rstar3DOperations();
         BoostRTreeExamples::boxRTreeOperations();
         BoostRTreeExamples::advancedQueryOperations();
         BoostRTreeExamples::performanceComparison();
         BoostRTreeExamples::dynamicOperations();
-
+#endif
         std::cout << "\n=== R-tree Configuration Options ===" << std::endl;
         std::cout << "Available splitting algorithms:" << std::endl;
         std::cout << "  - Linear: Fast insertion, moderate query performance"

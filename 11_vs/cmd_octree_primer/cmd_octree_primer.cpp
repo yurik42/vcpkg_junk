@@ -3,6 +3,8 @@
 // "example to build an octree"
 //
 
+#define _CRT_SECURE_NO_WARNINGS 1
+
 #include <cmath>
 #include <iostream>
 #include <memory>

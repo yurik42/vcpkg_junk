@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_octree_primer", "cmd_oc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_pcl_octree_primer", "cmd_pcl_octree_primer\cmd_pcl_octree_primer.vcxproj", "{421E72B9-32B5-427B-86A3-5938B7354A4C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_boost_rtree_primer", "cmd_boost_rtree_primer\cmd_boost_rtree_primer.vcxproj", "{2BADF7BC-354C-4D4E-8B75-F397D48E2230}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -33,6 +35,10 @@ Global
 		{421E72B9-32B5-427B-86A3-5938B7354A4C}.Debug|x64.Build.0 = Debug|x64
 		{421E72B9-32B5-427B-86A3-5938B7354A4C}.Release|x64.ActiveCfg = Release|x64
 		{421E72B9-32B5-427B-86A3-5938B7354A4C}.Release|x64.Build.0 = Release|x64
+		{2BADF7BC-354C-4D4E-8B75-F397D48E2230}.Debug|x64.ActiveCfg = Debug|x64
+		{2BADF7BC-354C-4D4E-8B75-F397D48E2230}.Debug|x64.Build.0 = Debug|x64
+		{2BADF7BC-354C-4D4E-8B75-F397D48E2230}.Release|x64.ActiveCfg = Release|x64
+		{2BADF7BC-354C-4D4E-8B75-F397D48E2230}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

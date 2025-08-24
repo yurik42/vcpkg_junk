@@ -178,7 +178,7 @@ public:
                 (enlargement == minEnlargement && area < minArea)) {
                 minEnlargement = enlargement;
                 minArea = area;
-                bestIndex = i;
+                bestIndex = static_cast<int>(i);
             }
         }
 
@@ -317,8 +317,8 @@ private:
 
                 if (dist > maxDistance) {
                     maxDistance = dist;
-                    seed1 = i;
-                    seed2 = j;
+                    seed1 = static_cast<int>(i);
+                    seed2 = static_cast<int>(j);
                 }
             }
         }
@@ -393,7 +393,11 @@ private:
         std::vector<std::pair<float, RTreeEntry>> candidates;
         collectAllEntries(root, candidates, queryPoint);
 
-        std::sort(candidates.begin(), candidates.end());
+        std::sort(candidates.begin(), candidates.end(),
+                  [](std::pair<float, RTreeEntry> const &l,
+                     std::pair<float, RTreeEntry> const &r) {
+                      return l.first < r.first;
+                  });
 
         int count = std::min(k, (int)candidates.size());
         for (int i = 0; i < count; ++i) {
@@ -425,7 +429,7 @@ private:
             return 0;
 
         if (node->isLeaf) {
-            return node->entries.size();
+            return static_cast<int>(node->entries.size());
         } else {
             int count = 0;
             for (auto child : node->children) {
@@ -466,7 +470,7 @@ public:
 
         std::cout << "Inserting " << points.size() << " points..." << std::endl;
         for (size_t i = 0; i < points.size(); ++i) {
-            rtree.insert(points[i], i);
+            rtree.insert(points[i], static_cast<int>(i));
         }
 
         std::cout << "\nR-tree structure:" << std::endl;
@@ -515,7 +519,7 @@ public:
         auto start = std::chrono::high_resolution_clock::now();
         RTree rtree;
         for (size_t i = 0; i < points.size(); ++i) {
-            rtree.insert(points[i], i);
+            rtree.insert(points[i], static_cast<int>(i));
         }
         auto buildTime = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - start);

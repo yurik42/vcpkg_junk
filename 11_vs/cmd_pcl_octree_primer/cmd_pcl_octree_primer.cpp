@@ -5,6 +5,9 @@
 
 #define _CRT_SECURE_NO_WARNINGS 1
 
+#define CHANGEDETECTIONEXAMPLE 0 /* TODO: fix the compiler */
+#define VOXELCENTROIDEXAMPLE 0   /* TODO: fix it */
+
 #include <ctime>
 #include <iostream>
 #include <pcl/common/time.h>
@@ -127,7 +130,7 @@ public:
             }
         }
     }
-
+#if CHANGEDETECTIONEXAMPLE
     // Example 2: Change Detection
     static void changeDetectionExample() {
         std::cout << "\n=== Change Detection Example ===" << std::endl;
@@ -174,7 +177,8 @@ public:
                       << std::endl;
         }
     }
-
+#endif
+#if VOXELCENTROIDEXAMPLE
     // Example 3: Voxel Centroid Calculation
     static void voxelCentroidExample() {
         std::cout << "\n=== Voxel Centroid Example ===" << std::endl;
@@ -212,7 +216,7 @@ public:
                       << point.y << ", " << point.z << ")" << std::endl;
         }
     }
-
+#endif
     // Example 4: Occupancy Grid
     static void occupancyGridExample() {
         std::cout << "\n=== Occupancy Grid Example ===" << std::endl;
@@ -325,8 +329,12 @@ int main() {
     try {
         // Run all examples
         PCLOctreeExamples::basicOctreeSearch();
+#if CHANGEDETECTIONEXAMPLE
         PCLOctreeExamples::changeDetectionExample();
+#endif
+#if VOXELCENTROIDEXAMPLE
         PCLOctreeExamples::voxelCentroidExample();
+#endif
         PCLOctreeExamples::occupancyGridExample();
         PCLOctreeExamples::performanceComparison();
 
@@ -346,14 +354,15 @@ int main() {
         std::cout << "Branch nodes: " << octree.getBranchCount() << std::endl;
 
         // Get bounding box
-        Eigen::Vector3f min_pt, max_pt;
-        octree.getBoundingBox(min_pt, max_pt);
+        Eigen::Vector3d min_pt, max_pt;
+        octree.getBoundingBox(min_pt[0], min_pt[1], min_pt[2], max_pt[0],
+                              max_pt[1], max_pt[2]);
         std::cout << "Bounding box: min(" << min_pt.transpose() << ") max("
                   << max_pt.transpose() << ")" << std::endl;
 
     } catch (const std::exception &e) {
         std::cerr << "Error: " << e.what() << std::endl;
-        return -1;
+        return 1;
     }
 
     return 0;

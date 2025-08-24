@@ -207,6 +207,7 @@ public:
         std::cout << "\n3D Box query (-10,-10,-10) to (10,10,10):" << std::endl;
 
         size_t count = 0;
+#if 0
         rtree.query(bgi::within(query_box), [&count](const PointValue3D &v) {
             if (count < 5) {
                 float x = bg::get<0>(v.first);
@@ -218,7 +219,12 @@ public:
             count++;
             return true; // Continue iteration
         });
-
+#else
+        // std::back_inserter(result)
+        std::vector<Point3D> result;
+        rtree.query(bgi::within(query_box), std::back_inserter(result));
+        count = result.size();
+#endif
         std::cout << "  Total points in box: " << count << std::endl;
     }
 #if 0

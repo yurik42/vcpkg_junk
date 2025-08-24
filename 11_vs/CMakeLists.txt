@@ -20,8 +20,12 @@ find_package(Boost REQUIRED COMPONENTS
     geometry
 )
 
-find_package(pcl REQUIRED
+find_package(PCL REQUIRED
 )
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(cmd_simple_boost_rstar_example)
 

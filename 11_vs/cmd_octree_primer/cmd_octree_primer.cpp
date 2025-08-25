@@ -172,7 +172,7 @@ public:
     // Get total number of points in subtree
     int getPointCount() const {
         if (isLeaf) {
-            return points.size();
+            return static_cast<int>(points.size());
         } else {
             int count = 0;
             for (int i = 0; i < 8; i++) {
@@ -328,9 +328,9 @@ int main() {
         Point3D(8, 7, 6),        Point3D(-5, -6, -7),
         Point3D(3, 3, 3),        Point3D(-1, -1, -1),
         Point3D(9, 9, 9),        Point3D(-9, -9, -9),
-        Point3D(2.5, 1.5, 4.2),  Point3D(-3.1, 2.8, -0.5),
-        Point3D(6.7, -4.3, 1.9), Point3D(0.5, 0.5, 0.5),
-        Point3D(7.8, 8.2, 5.5)};
+        Point3D(2.5, 1.5, 4.2F),  Point3D(-3.1F, 2.8F, -0.5),
+        Point3D(6.7F, -4.3F, 1.9F), Point3D(0.5, 0.5, 0.5),
+        Point3D(7.8F, 8.2F, 5.5)};
 
     std::cout << "Inserting " << testPoints.size() << " points..." << std::endl;
     for (const Point3D &point : testPoints) {

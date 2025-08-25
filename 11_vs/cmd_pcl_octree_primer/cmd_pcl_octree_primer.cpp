@@ -5,6 +5,10 @@
 
 #define _CRT_SECURE_NO_WARNINGS 1
 
+#ifdef _WIN32
+#   pragma warning (disable:4805)
+#endif
+
 #define CHANGEDETECTIONEXAMPLE 0 /* TODO: fix the compiler */
 #define VOXELCENTROIDEXAMPLE 0   /* TODO: fix it */
 

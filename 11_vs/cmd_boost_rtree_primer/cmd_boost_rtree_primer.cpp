@@ -110,7 +110,7 @@ public:
             std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
         std::cout << "Inserted " << rtree.size() << " points in "
-                  << insert_time.count() << " mms" << std::endl;
+                  << insert_time.count() << " μs" << std::endl;
 
         // Query operations
         Point2D query_point(10.0f, 20.0f);

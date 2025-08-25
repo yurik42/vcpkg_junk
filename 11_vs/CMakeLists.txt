@@ -30,6 +30,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_subdirectory(cmd_simple_boost_rstar_example)
 add_subdirectory(cmd_rtree_primer)
 add_subdirectory(cmd_boost_rtree_primer)
+add_subdirectory(cmd_pcl_octree_primer)
 
 # add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 

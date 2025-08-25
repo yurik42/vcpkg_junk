@@ -221,7 +221,7 @@ public:
         });
 #else
         // std::back_inserter(result)
-        std::vector<Point3D> result;
+        std::vector<PointValue3D> result;
         rtree.query(bgi::within(query_box), std::back_inserter(result));
         count = result.size();
 #endif

@@ -226,6 +226,32 @@ public:
         count = result.size();
 #endif
         std::cout << "  Total points in box: " << count << std::endl;
+
+        {
+            auto traverse_with_iterators = [](RTree3D_RStar const &tree) {
+                std::cout << "=== Iterator-based Traversal ===\n";
+
+                // Forward iteration
+                std::cout << "Forward iteration:\n";
+                for (auto it = tree.begin(); it != tree.end(); ++it) {
+                    auto const &pt = it->first;
+                    auto data = it->second;
+                    std::cout << "Point: (" << bg::get<0>(pt) << ", "
+                              << bg::get<1>(pt) << ") Data: " << data << "\n";
+                }
+
+                // Range-based for loop
+                std::cout << "\nRange-based for loop:\n";
+                for (const auto &entry : tree) {
+                    auto const &pt = entry.first;
+                    auto data = entry.second;
+                    std::cout << "Point: (" << bg::get<0>(pt) << ", "
+                              << bg::get<1>(pt) << ") Data: " << data << "\n";
+                }
+            };
+
+            traverse_with_iterators(rtree);
+        }
     }
 
     // Example 3: Box R-tree for Rectangular Objects
@@ -455,13 +481,12 @@ int main() {
 
     try {
         BoostRTreeExamples::basic2DPointOperations();
-#if 0
         BoostRTreeExamples::rstar3DOperations();
         BoostRTreeExamples::boxRTreeOperations();
         BoostRTreeExamples::advancedQueryOperations();
         BoostRTreeExamples::performanceComparison();
         BoostRTreeExamples::dynamicOperations();
-#endif
+
         std::cout << "\n=== R-tree Configuration Options ===" << std::endl;
         std::cout << "Available splitting algorithms:" << std::endl;
         std::cout << "  - Linear: Fast insertion, moderate query performance"

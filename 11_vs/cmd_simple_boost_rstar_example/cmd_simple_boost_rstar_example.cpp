@@ -16,7 +16,18 @@ typedef std::pair<Point, int> Value; // Point with ID
 // R* tree with maximum 16 values per node
 typedef bgi::rtree<Value, bgi::rstar<16>> RStarTree;
 
+#ifdef _WIN32
+#   define WIN32_LEAN_AND_MEAN
+#   include "windows.h"
+#endif
+
 int main() {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+    std::cout << "code page == " << GetACP() << "\n";
+#endif
+    
     std::cout << "Simple Boost R* Tree Example\n";
     std::cout << "============================\n\n";
 
@@ -63,7 +74,7 @@ int main() {
                 std::back_inserter(result_nearest));
 
     for (const auto &val : result_nearest) {
-        float distance = bg::distance(query_point, val.first);
+        float distance = static_cast<float>(bg::distance(query_point, val.first));
         std::cout << "   Point " << val.second << ": (" << bg::get<0>(val.first)
                   << ", " << bg::get<1>(val.first)
                   << ") - distance: " << distance << "\n";
@@ -109,7 +120,7 @@ int main() {
     for (auto it = rtree.qbegin(bgi::nearest(query_point2, 5));
          it != rtree.qend() && count < 2; ++it, ++count) {
 
-        float distance = bg::distance(query_point2, it->first);
+        float distance = static_cast<float>(bg::distance(query_point2, it->first));
         std::cout << "   Point " << it->second << ": (" << bg::get<0>(it->first)
                   << ", " << bg::get<1>(it->first)
                   << ") - distance: " << distance << "\n";

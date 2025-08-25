@@ -2,6 +2,7 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/index/detail/rtree/utilities/view.hpp>
 #include <boost/geometry/index/rtree.hpp>
 #include <chrono>
 #include <iostream>
@@ -251,6 +252,9 @@ public:
             };
 
             traverse_with_iterators(rtree);
+        }
+        {
+            //auto root = rtree.root;
         }
     }
 

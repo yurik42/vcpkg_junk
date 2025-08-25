@@ -227,7 +227,7 @@ public:
 #endif
         std::cout << "  Total points in box: " << count << std::endl;
     }
-#if 0
+
     // Example 3: Box R-tree for Rectangular Objects
     static void boxRTreeOperations() {
         std::cout << "\n=== Box R-tree Operations ===" << std::endl;
@@ -446,7 +446,7 @@ public:
         std::cout << "  Rebuilt with " << rtree.size() << " points"
                   << std::endl;
     }
-#endif
+
 };
 
 int main() {

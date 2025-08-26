@@ -9,6 +9,9 @@
 #include <string>
 #include <vector>
 
+#include <cassert>
+#include <filesystem>
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846 // pi
 #endif
@@ -272,8 +275,15 @@ public:
         std::cout << "Generating 3D Tiles...\n";
 
         // Create output directory
+#if 0
         std::string mkdir_cmd = "mkdir -p " + output_directory;
-        system(mkdir_cmd.c_str());
+        auto rc = system(mkdir_cmd.c_str());
+        assert(rc == 0);
+#else
+        std::error_code rc;
+        std::filesystem::create_directories(output_directory, rc);
+        assert(rc.value() == 0);
+#endif
 
         // Generate tileset.json
         generateTilesetJson();
@@ -353,6 +363,8 @@ private:
 
     void generateTilesetJson() const {
         std::ofstream file(output_directory + "tileset.json");
+
+        assert(file.good());
 
         file << "{\n";
         file << "  \"asset\": {\n";

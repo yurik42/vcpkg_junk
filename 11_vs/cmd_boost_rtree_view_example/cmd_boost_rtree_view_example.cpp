@@ -3,11 +3,11 @@
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
-// WARNING: These are internal headers and may change between versions
-// Use with caution in production code
-#include <boost/geometry/index/detail/rtree/utilities/view.hpp>
-#include <boost/geometry/index/detail/rtree/node/node.hpp>
-#include <boost/geometry/index/detail/rtree/visitors/iterator.hpp>
+//// WARNING: These are internal headers and may change between versions
+//// Use with caution in production code
+//#include <boost/geometry/index/detail/rtree/utilities/view.hpp>
+//#include <boost/geometry/index/detail/rtree/node/node.hpp>
+//#include <boost/geometry/index/detail/rtree/visitors/iterator.hpp>
 
 #include <iostream>
 #include <vector>
@@ -151,10 +151,9 @@ public:
         size_t max_per_node = 4; // quadratic<4>
         size_t min_per_node = max_per_node / 3;
         
-#if 0 // BROKEN
         int estimated_height = estimate_height(tree.size(), min_per_node);
         std::cout << "Estimated height: " << estimated_height << "\n";
-#endif        
+
         // Analyze spatial distribution
         analyze_spatial_distribution(tree);
         
@@ -164,16 +163,18 @@ public:
     
 private:
     static int estimate_height(size_t elements, size_t min_per_leaf) {
-        if (elements <= min_per_leaf) return 1;
-        
+        if (elements <= min_per_leaf)
+            return 1;
+
         int height = 1;
+#if 0
         size_t capacity = min_per_leaf;
         
         while (capacity < elements) {
             capacity *= min_per_leaf;
             height++;
         }
-        
+#endif
         return height;
     }
     

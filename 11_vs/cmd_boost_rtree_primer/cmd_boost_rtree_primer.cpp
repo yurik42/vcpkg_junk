@@ -2,8 +2,14 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/index/detail/rtree/utilities/view.hpp>
 #include <boost/geometry/index/rtree.hpp>
+
+// WARNING: These are internal headers and may change between versions
+// Use with caution in production code
+#include <boost/geometry/index/detail/rtree/utilities/view.hpp>
+#include <boost/geometry/index/detail/rtree/node/node.hpp>
+#include <boost/geometry/index/detail/rtree/visitors/iterator.hpp>
+
 #include <chrono>
 #include <iostream>
 #include <memory>
@@ -28,6 +34,9 @@ typedef std::pair<Box2D, int> BoxValue2D;             // Box + ID
 typedef bgi::rtree<PointValue2D, bgi::quadratic<16>> RTree2D_Quad;
 typedef bgi::rtree<PointValue3D, bgi::rstar<32>> RTree3D_RStar;
 typedef bgi::rtree<BoxValue2D, bgi::linear<8>> RTreeBox2D;
+
+typedef bgi::detail::rtree::utilities::view<RTree3D_RStar> RTree3D_RStar_view;
+
 
 class BoostRTreeExamples {
 public:
@@ -228,7 +237,7 @@ public:
 #endif
         std::cout << "  Total points in box: " << count << std::endl;
 
-        {
+        if(0) {
             auto traverse_with_iterators = [](RTree3D_RStar const &tree) {
                 std::cout << "=== Iterator-based Traversal ===\n";
 
@@ -254,6 +263,19 @@ public:
             traverse_with_iterators(rtree);
         }
         {
+            struct zond_t : public boost::static_visitor<> {
+                void operator()(
+                    bgi::detail::rtree::variant_leaf<PointValue3D, bgi::rstar<32>, Point3D, bgi::detail::rtree::allocators<boost::container::new_allocator<PointValue3D>, PointValue3D, bgi::rstar<32>, Point3D, bgi::detail::rtree::node_variant_static_tag>, bgi::detail::rtree::node_variant_static_tag> const &hz
+                    ) 
+                { 
+                    std::cout << "here...\n";
+                };
+            };
+            RTree3D_RStar_view backdoor(rtree);
+
+            zond_t zond;
+            backdoor.apply_visitor(zond);
+
             //auto root = rtree.root;
         }
     }

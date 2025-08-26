@@ -17,6 +17,35 @@
 #include <random>
 #include <vector>
 
+#include "boost_rtree_zond.h"
+
+#ifndef CONSOLE
+#if _DEBUG
+#define CONSOLE(x)                                                             \
+    do {                                                                       \
+        std::cout << __func__ << ":" << x << '\n';                             \
+    } while (0)
+#else
+#define CONSOLE(x)
+#endif
+
+#define CONSOLE_EVAL(x) CONSOLE(#x << " : " << (x))
+
+// "test" console output
+#if _DEBUG
+#define CONSOLE_T(x)                                                           \
+    do {                                                                       \
+        std::cout << test_case_name() << "." << test_name() << ": " << x       \
+                  << '\n';                                                     \
+    } while (0)
+#else
+#define CONSOLE_T(x)
+#endif
+
+#define CONSOLE_TE(x) CONSOLE_T(#x << " : " << (x))
+
+#endif // CONSOLE
+
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
@@ -296,7 +325,7 @@ public:
 
         Point3D query_point(5.0f, 10.0f, -5.0f);
 
-            struct zond_t : public boost::static_visitor<> {
+        struct zond_t {
             void
             operator()(bgi::detail::rtree::variant_leaf<
                        PointValue3D, bgi::rstar<32>, Point3D,
@@ -321,8 +350,13 @@ public:
             auto tr = backdoor.translator();
             std::cout << "tr == " << sizeof(tr) << "\n";
         }
-        {
+        if (0) {
+            CONSOLE("bgi::detail::rtree::utilities::print...");
             bgi::detail::rtree::utilities::print(std::cout, rtree);
+        }
+        {
+            CONSOLE("bgi::detail::rtree::utilities::zond...");
+            bgi::detail::rtree::utilities::zond(std::cout, rtree);
         }
     }
 

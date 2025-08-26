@@ -9,6 +9,7 @@
 #include <boost/geometry/index/detail/rtree/utilities/view.hpp>
 #include <boost/geometry/index/detail/rtree/node/node.hpp>
 #include <boost/geometry/index/detail/rtree/visitors/iterator.hpp>
+#include <boost/geometry/index/detail/rtree/utilities/print.hpp>
 
 #include <chrono>
 #include <iostream>
@@ -280,6 +281,51 @@ public:
         }
     }
 
+    static void rstar3DOperationsToo() {
+        std::cout << "\n=== 3D Point R-tree with R* Algorithm (Too) ===" << std::endl;
+
+        auto points = generateRandom3DPoints(100, 0, 100);
+        std::cout << "Generated " << points.size() << " random 3D points"
+                  << std::endl;
+
+        // R* tree generally provides better query performance but slower
+        // insertions
+        RTree3D_RStar rtree;
+
+        rtree.insert(points.begin(), points.end());
+
+        Point3D query_point(5.0f, 10.0f, -5.0f);
+
+            struct zond_t : public boost::static_visitor<> {
+            void
+            operator()(bgi::detail::rtree::variant_leaf<
+                       PointValue3D, bgi::rstar<32>, Point3D,
+                       bgi::detail::rtree::allocators<
+                           boost::container::new_allocator<PointValue3D>,
+                           PointValue3D, bgi::rstar<32>, Point3D,
+                           bgi::detail::rtree::node_variant_static_tag>,
+                       bgi::detail::rtree::node_variant_static_tag> const &hz) {
+                std::cout << "here...\n";
+            };
+        };
+        RTree3D_RStar_view backdoor(rtree);
+        zond_t zond;
+        backdoor.apply_visitor(zond);
+
+        {
+            auto depth = backdoor.depth();
+            std::cout << "depth == " << depth << "\n";
+        }
+
+        {
+            auto tr = backdoor.translator();
+            std::cout << "tr == " << sizeof(tr) << "\n";
+        }
+        {
+            bgi::detail::rtree::utilities::print(std::cout, rtree);
+        }
+    }
+
     // Example 3: Box R-tree for Rectangular Objects
     static void boxRTreeOperations() {
         std::cout << "\n=== Box R-tree Operations ===" << std::endl;
@@ -506,12 +552,13 @@ int main() {
     std::cout << "==============================" << std::endl;
 
     try {
-        BoostRTreeExamples::basic2DPointOperations();
-        BoostRTreeExamples::rstar3DOperations();
-        BoostRTreeExamples::boxRTreeOperations();
-        BoostRTreeExamples::advancedQueryOperations();
-        BoostRTreeExamples::performanceComparison();
-        BoostRTreeExamples::dynamicOperations();
+        //BoostRTreeExamples::basic2DPointOperations();
+        //BoostRTreeExamples::rstar3DOperations();
+        BoostRTreeExamples::rstar3DOperationsToo();
+        //BoostRTreeExamples::boxRTreeOperations();
+        //BoostRTreeExamples::advancedQueryOperations();
+        //BoostRTreeExamples::performanceComparison();
+        //BoostRTreeExamples::dynamicOperations();
 
         std::cout << "\n=== R-tree Configuration Options ===" << std::endl;
         std::cout << "Available splitting algorithms:" << std::endl;

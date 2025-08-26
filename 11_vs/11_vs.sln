@@ -27,6 +27,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_boost_rtree_traversal",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_boost_rtree_view_example", "cmd_boost_rtree_view_example\cmd_boost_rtree_view_example.vcxproj", "{0C14A066-82DD-4DBD-89E2-96DFE44503A8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_cesium_3d_tiles_pointcloud", "cmd_cesium_3d_tiles_pointcloud\cmd_cesium_3d_tiles_pointcloud.vcxproj", "{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -69,6 +71,10 @@ Global
 		{0C14A066-82DD-4DBD-89E2-96DFE44503A8}.Debug|x64.Build.0 = Debug|x64
 		{0C14A066-82DD-4DBD-89E2-96DFE44503A8}.Release|x64.ActiveCfg = Release|x64
 		{0C14A066-82DD-4DBD-89E2-96DFE44503A8}.Release|x64.Build.0 = Release|x64
+		{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}.Debug|x64.ActiveCfg = Debug|x64
+		{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}.Debug|x64.Build.0 = Debug|x64
+		{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}.Release|x64.ActiveCfg = Release|x64
+		{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -102,6 +102,7 @@ private:
     size_t max_points_per_tile;
     int max_depth;
     std::string output_directory;
+    Point3D rtc_center;
 
 public:
     PointCloudTo3DTiles(size_t max_points = 50000, int max_depth = 10,
@@ -449,6 +450,18 @@ private:
         }
 
         // PNTS Header
+        // struct header_t
+        //{
+        //    char magic[4];
+        //    uint32_t version;
+        //    uint32_t byteLength;
+        //    uint32_t featureTableJSONByteLength;
+        //    uint32_t featureTableBinaryByteLength;
+        //    uint32_t batchTableJSONByteLength;
+        //    uint32_t batchTableBinaryByteLength;
+        //};
+
+        uint32_t version = 1;
         uint32_t point_count = static_cast<uint32_t>(tile->points.size());
         uint32_t positions_size = point_count * 12; // 3 floats per point
         uint32_t colors_size = point_count * 3;     // 3 bytes per point
@@ -458,27 +471,34 @@ private:
             28 + feature_table_json_size + feature_table_binary_size;
 
         // Write PNTS header
-        file.write("pnts", 4);                                      // Magic
-        file.write(reinterpret_cast<const char *>(&total_size), 4); // Length
-        file.write(reinterpret_cast<const char *>(&feature_table_json_size), 4);
+        file.write("pnts", 4);                                   // Magic: 0
+        file.write(reinterpret_cast<const char *>(&version), 4); // Version: 4
+        file.write(reinterpret_cast<const char *>(&total_size),
+                   4); // byteLength: 8
+        file.write(reinterpret_cast<const char *>(&feature_table_json_size),
+                   4); // featureTableJSONByteLength:12
         file.write(reinterpret_cast<const char *>(&feature_table_binary_size),
-                   4);
-        file.write(reinterpret_cast<const char *>(&point_count), 4);
+                   4); // featureTableBinaryByteLength:16
         uint32_t batch_table_json_size = 0;
         uint32_t batch_table_binary_size = 0;
-        file.write(reinterpret_cast<const char *>(&batch_table_json_size), 4);
-        file.write(reinterpret_cast<const char *>(&batch_table_binary_size), 4);
+        file.write(reinterpret_cast<const char *>(&batch_table_json_size),
+                   4); // batchTableJSONByteLength:20
+        file.write(reinterpret_cast<const char *>(&batch_table_binary_size),
+                   4); // batchTableBinaryByteLength:24
 
         // Feature table JSON
-        std::string feature_json = "{"
-                                   "\"POINTS_LENGTH\":" +
-                                   std::to_string(point_count) +
-                                   ","
-                                   "\"POSITION\":{\"byteOffset\":0},"
-                                   "\"RGB\":{\"byteOffset\":" +
-                                   std::to_string(positions_size) +
-                                   "}"
-                                   "}";
+        std::string feature_json =
+            "{"
+            "\"POINTS_LENGTH\":" +
+            std::to_string(point_count) +
+            ","
+            "\"POSITION\":{\"byteOffset\":0},"
+            "\"RGB\":{\"byteOffset\":" +
+            std::to_string(positions_size) + "}" + "," + "\"RTC_CENTER\":[" +
+            std::to_string(rtc_center.x) + "," + std::to_string(rtc_center.y) +
+            "," + std::to_string(rtc_center.y) +
+            "]"
+            "}";
 
         feature_json.resize(feature_table_json_size, ' ');
         file.write(feature_json.c_str(), feature_table_json_size);

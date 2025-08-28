@@ -9,7 +9,6 @@ add_executable(cmd_simple_boost_rstar_example
     cmd_simple_boost_rstar_example.cpp)
 
 # Find Boost (adjust components as needed)
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS geometry)
 
-target_include_directories(cmd_simple_boost_rstar_example PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(cmd_simple_boost_rstar_example PRIVATE ${Boost_LIBRARIES})
+target_link_libraries(cmd_simple_boost_rstar_example PRIVATE Boost::geometry)

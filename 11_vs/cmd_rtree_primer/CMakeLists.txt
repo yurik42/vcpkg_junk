@@ -9,7 +9,6 @@ add_executable(cmd_rtree_primer
     cmd_rtree_primer.cpp)
 
 # Find Boost (adjust components as needed)
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS geometry)
 
-target_include_directories(cmd_rtree_primer PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(cmd_rtree_primer PRIVATE ${Boost_LIBRARIES})
+target_link_libraries(cmd_rtree_primer PRIVATE Boost::geometry)

@@ -581,18 +581,28 @@ public:
 
 };
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include "windows.h"
+#endif
+
 int main() {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+    std::cout << "code page == " << GetACP() << "\n";
+#endif
     std::cout << "Boost.Geometry R-tree Examples" << std::endl;
     std::cout << "==============================" << std::endl;
 
     try {
-        //BoostRTreeExamples::basic2DPointOperations();
-        //BoostRTreeExamples::rstar3DOperations();
+        BoostRTreeExamples::basic2DPointOperations();
+        BoostRTreeExamples::rstar3DOperations();
         BoostRTreeExamples::rstar3DOperationsToo();
-        //BoostRTreeExamples::boxRTreeOperations();
-        //BoostRTreeExamples::advancedQueryOperations();
-        //BoostRTreeExamples::performanceComparison();
-        //BoostRTreeExamples::dynamicOperations();
+        BoostRTreeExamples::boxRTreeOperations();
+        BoostRTreeExamples::advancedQueryOperations();
+        BoostRTreeExamples::performanceComparison();
+        BoostRTreeExamples::dynamicOperations();
 
         std::cout << "\n=== R-tree Configuration Options ===" << std::endl;
         std::cout << "Available splitting algorithms:" << std::endl;

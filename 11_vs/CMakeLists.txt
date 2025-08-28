@@ -28,10 +28,15 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(cmd_app1)
-add_subdirectory(cmd_simple_boost_rstar_example)
-add_subdirectory(cmd_rtree_primer)
 add_subdirectory(cmd_boost_rtree_primer)
+add_subdirectory(cmd_boost_rtree_traversal)
+add_subdirectory(cmd_boost_rtree_view_example)
+add_subdirectory(cmd_cesium_3d_tiles_pointcloud)
+add_subdirectory(cmd_mem_allocate)
+add_subdirectory(cmd_octree_primer)
 add_subdirectory(cmd_pcl_octree_primer)
+add_subdirectory(cmd_rtree_primer)
+add_subdirectory(cmd_simple_boost_rstar_example)
 
 # add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 

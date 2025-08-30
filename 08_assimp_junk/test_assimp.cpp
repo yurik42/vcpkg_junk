@@ -1267,37 +1267,59 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
     ASSERT_TRUE(fs::is_regular_file(test_data("tileset2/bounding_boxes.glb")));
 
     auto ws = create_ws();
-
-    auto bounding_boxes_glb = test_data("tileset2/bounding_boxes.glb").string();
-    Assimp::Importer importer;
-    // clang-format off
+    {
+        auto bounding_boxes_glb =
+            test_data("tileset2/bounding_boxes.glb").string();
+        Assimp::Importer importer;
+        // clang-format off
     unsigned int postprocess_flags = 0 
             | aiProcess_GenBoundingBoxes
+            | aiProcess_ValidateDataStructure
+            | aiProcess_CalcTangentSpace
+            | aiProcess_Triangulate
+            | aiProcess_GenNormals
+            | aiProcess_JoinIdenticalVertices
             ;
-    // clang-format on
+        // clang-format on
 
-    // The original coordinates are in UTM 13N
-    auto actual = importer.ReadFile(bounding_boxes_glb, postprocess_flags);
-    ASSERT_TRUE(actual);
+        // The original coordinates are in UTM 13N
+        auto actual = importer.ReadFile(bounding_boxes_glb, postprocess_flags);
+        ASSERT_TRUE(actual);
 
-    CONSOLE(std::setprecision(15));
-    CONSOLE_EVAL(actual->mRootNode->mTransformation);
+        CONSOLE(std::setprecision(15));
+        CONSOLE_EVAL(actual->mRootNode->mTransformation);
 
-    EXPECT_TRUE(aiMatrix4x4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1) ==
-                actual->mRootNode->mTransformation);
+        EXPECT_TRUE(aiMatrix4x4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0,
+                                1) == actual->mRootNode->mTransformation);
 
-    auto bounding_box = this->compute_aabb(actual);
+        auto bounding_box = compute_aabb(actual);
 
-    aiMatrix4x4 translate;
-    aiMatrix4x4::Translation(-bounding_box.mMin, translate);
-    CONSOLE_EVAL(translate);
+        aiMatrix4x4 translate;
+        aiMatrix4x4::Translation(-bounding_box.mMin, translate);
+        CONSOLE_EVAL(translate);
 
-    /* update the root transform matrix */
-    actual->mRootNode->mTransformation = translate * actual->mRootNode->mTransformation;
-    CONSOLE_EVAL(actual->mRootNode->mTransformation);
+        /* update the root transform matrix */
+        actual->mRootNode->mTransformation =
+            translate * actual->mRootNode->mTransformation;
+        CONSOLE_EVAL(actual->mRootNode->mTransformation);
 
-    // aiVector3D min_point {496805.969, 4420721.5, 1625.33777};
-    Assimp::Exporter exporter;
+        // aiVector3D min_point {496805.969, 4420721.5, 1625.33777};
+        Assimp::Exporter exporter;
 
-    auto actual_status = exporter.Export(actual, "glb2", (ws / "actual.glb").string());
+        auto actual_status =
+            exporter.Export(actual, "glb", (ws / "model.glb").string());
+        ASSERT_EQ(0, actual_status);
+        exporter.Export(actual, "assxml", (ws / "model.xml").string());
+    }
+    // verify the saved model
+    {
+        // Create default logger that outputs to console
+        Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE,
+                                      aiDefaultLogStream_STDOUT);
+
+        Assimp::Importer importer;
+        auto model = importer.ReadFile((ws / "model.glb").string(), 0);
+        ASSERT_TRUE(model);
+        CONSOLE_EVAL(compute_aabb(model));
+    }
 }

@@ -1196,13 +1196,13 @@ TEST_F(TransF, c3dprototype_bb) {
         double z;
     };
 
-    // WGS84 constants
-    constexpr double a = 6378137.0;         // semi-major axis
-    constexpr double f = 1.0 / 298.257223563; // flattening
-    constexpr double b = a * (1 - f);       // semi-minor axis
-    constexpr double e2 = 1 - (b * b) / (a * a);
-
     auto geodetic_to_ecef = [](const Geodetic& geo) -> ECEF {
+        // WGS84 constants
+        constexpr double a = 6378137.0;           // semi-major axis
+        constexpr double f = 1.0 / 298.257223563; // flattening
+        constexpr double b = a * (1 - f);         // semi-minor axis
+        constexpr double e2 = 1 - (b * b) / (a * a);
+
         double lon = geo.lon_deg * M_PI / 180.0;
         double lat = geo.lat_deg * M_PI / 180.0;
         double N = a / sqrt(1 - e2 * sin(lat) * sin(lat));

@@ -1099,10 +1099,128 @@ TEST_F(TransF, c3dprototype_t0) {
         }
     }
 
+    auto compute_aabb = [] (aiScene const *actual) -> aiAABB {
+        aiVector3D sceneMin( std::numeric_limits<float>::max(),
+                             std::numeric_limits<float>::max(),
+                             std::numeric_limits<float>::max() );
+        aiVector3D sceneMax( std::numeric_limits<float>::lowest(),
+                             std::numeric_limits<float>::lowest(),
+                             std::numeric_limits<float>::lowest() );
+
+        for (unsigned int i = 0; i < actual->mNumMeshes; ++i) {
+            const aiMesh *mesh = actual->mMeshes[i];
+            for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
+                const aiVector3D &vertex = mesh->mVertices[v];
+                sceneMin.x = std::min(sceneMin.x, vertex.x);
+                sceneMin.y = std::min(sceneMin.y, vertex.y);
+                sceneMin.z = std::min(sceneMin.z, vertex.z);
+                sceneMax.x = std::max(sceneMax.x, vertex.x);
+                sceneMax.y = std::max(sceneMax.y, vertex.y);
+                sceneMax.z = std::max(sceneMax.z, vertex.z);
+            }
+        }
+        // CONSOLE("Scene AABB min: " << sceneMin << " max: " << sceneMax);
+        return aiAABB {sceneMin, sceneMax};
+    };
+
+    auto bounding_box = compute_aabb(actual);
+    CONSOLE("Scene AABB min: " << bounding_box.mMin << " max: " << bounding_box.mMax);
+
     Assimp::Exporter exporter;
 
     auto status = exporter.Export(actual, "assxml", (ws / "actual.xml").string());
     EXPECT_EQ(0, status);
+}
+
+/// @brief 
+/// @param --gtest_filter=TransF.c3dprototype_bb
+/// @param  
+TEST_F(TransF, c3dprototype_bb) {
+    auto actual_bb = aiAABB{{496805.969, 4420721.5, 1625.33777},
+                            {496866.031, 4420784, 1636.51453}};
+
+    aiVector3D longitude_latitude_min = {-105.0373839395, 39.9366031861, 0.0};
+
+    // echo "496805.969 4420721.5" | cs2cs +proj=utm +zone=13 +datum=WGS84 +units=m +to +proj=latlong +datum=WGS84 -f "%.10f"
+    // echo "496866.031 4420784" | cs2cs +proj=utm +zone=13 +datum=WGS84 +units=m +to +proj=latlong +datum=WGS84 -f "%.10f"
+
+    /*
+        Cesium 3D Tiles boundingVolume.box format:
+        [centerX, centerY, centerZ, halfAxisXx, halfAxisXy, halfAxisXz, halfAxisYx, halfAxisYy, halfAxisYz, halfAxisZx, halfAxisZy, halfAxisZz]
+        where:
+        - center: midpoint of AABB
+        - half axes: half the size along each axis (for axis-aligned box, these are half extents along X, Y, Z)
+    */
+
+    aiVector3D center = (actual_bb.mMin + actual_bb.mMax) * 0.5f;
+    aiVector3D half_extent = (actual_bb.mMax - actual_bb.mMin) * 0.5f;
+
+    // Axis-aligned box: half axes are just half extents along X, Y, Z
+    std::array<double, 12> cesium_box = {
+        center.x, center.y, center.z,
+        half_extent.x, 0, 0,
+        0, half_extent.y, 0,
+        0, 0, half_extent.z
+    };
+
+    CONSOLE("Cesium boundingVolume.box: ["
+        << std::setprecision(16)
+        << cesium_box[0] << ", " << cesium_box[1] << ", " << cesium_box[2] << ", "
+        << cesium_box[3] << ", " << cesium_box[4] << ", " << cesium_box[5] << ", "
+        << cesium_box[6] << ", " << cesium_box[7] << ", " << cesium_box[8] << ", "
+        << cesium_box[9] << ", " << cesium_box[10] << ", " << cesium_box[11] << "]"
+    );
+
+    /*
+        To transform from local coordinates (e.g., UTM) to ECEF (Earth-Centered, Earth-Fixed),
+        you need to:
+        1. Convert local coordinates to geodetic (longitude, latitude, height).
+        2. Convert geodetic to ECEF.
+
+        This requires a geodetic library (e.g., proj, GeographicLib).
+        Here is a simple ECEF conversion for WGS84 ellipsoid.
+    */
+
+    struct Geodetic {
+        double lon_deg;
+        double lat_deg;
+        double height;
+    };
+
+    struct ECEF {
+        double x;
+        double y;
+        double z;
+    };
+
+    // WGS84 constants
+    constexpr double a = 6378137.0;         // semi-major axis
+    constexpr double f = 1.0 / 298.257223563; // flattening
+    constexpr double b = a * (1 - f);       // semi-minor axis
+    constexpr double e2 = 1 - (b * b) / (a * a);
+
+    auto geodetic_to_ecef = [](const Geodetic& geo) -> ECEF {
+        double lon = geo.lon_deg * M_PI / 180.0;
+        double lat = geo.lat_deg * M_PI / 180.0;
+        double N = a / sqrt(1 - e2 * sin(lat) * sin(lat));
+        double x = (N + geo.height) * cos(lat) * cos(lon);
+        double y = (N + geo.height) * cos(lat) * sin(lon);
+        double z = ((b * b) / (a * a) * N + geo.height) * sin(lat);
+        return {x, y, z};
+    };
+
+    // Example: convert bounding box center from UTM to ECEF
+    // You need to convert UTM to lon/lat first (use proj or similar).
+    // Here, we use the provided longitude_latitude_min as an example.
+
+    Geodetic geo_center;
+    geo_center.lon_deg = longitude_latitude_min.x; // longitude
+    geo_center.lat_deg = longitude_latitude_min.y; // latitude
+    geo_center.height = center.z;                  // use Z as height
+
+    auto ecef_center = geodetic_to_ecef(geo_center);
+
+    CONSOLE("ECEF center: x=" << ecef_center.x << " y=" << ecef_center.y << " z=" << ecef_center.z);
 }
 
 /// @brief

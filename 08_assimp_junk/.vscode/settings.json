@@ -3,6 +3,7 @@
         "AABB",
         "assxml",
         "cesiumjs",
+        "ECEF",
         "Eigen",
         "EPSG",
         "georeferenced",

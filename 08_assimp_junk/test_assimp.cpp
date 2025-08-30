@@ -1056,21 +1056,84 @@ TEST_F(TransF, matrix_transforms) {
     }
 }
 
-/// @brief 
+/// @brief
 /// @param --gtest_filter=TransF.c3dprototype_t0
 /// @param
 TEST_F(TransF, c3dprototype_t0) {
-    EXPECT_TRUE(fs::is_regular_file(test_data("tileset2/tileset2.json")));
-    EXPECT_TRUE(fs::is_regular_file(test_data("tileset2/bounding_boxes.glb")));
+    ASSERT_TRUE(fs::is_regular_file(test_data("tileset2/tileset2.json")));
+    ASSERT_TRUE(fs::is_regular_file(test_data("tileset2/bounding_boxes.glb")));
 
-    {
-        auto bounding_boxes_glb = test_data("tileset2/bounding_boxes.glb").string();
-        Assimp::Importer importer;
+    auto ws = create_ws();
 
-        auto actual = importer.ReadFile(bounding_boxes_glb, 0);
-        ASSERT_TRUE(actual);
+    auto bounding_boxes_glb = test_data("tileset2/bounding_boxes.glb").string();
+    Assimp::Importer importer;
+    // clang-format off
+    unsigned int postprocess_flags = 0 
+            | aiProcess_GenBoundingBoxes
+            ;
+    // clang-format on
+    auto actual = importer.ReadFile(bounding_boxes_glb, postprocess_flags);
+    ASSERT_TRUE(actual);
 
-        CONSOLE_EVAL(actual->HasMeshes());
-        CONSOLE_EVAL(actual->mNumMeshes);
+    CONSOLE_EVAL(actual->HasMeshes());
+    CONSOLE_EVAL(actual->mNumMeshes);
+
+    for (unsigned int i = 0; i < actual->mNumMeshes; ++i) {
+        const aiMesh *mesh = actual->mMeshes[i];
+
+        CONSOLE("Mesh " << i << " AABB min: " << mesh->mAABB.mMin
+                        << " max: " << mesh->mAABB.mMin);
     }
+
+    // dump mesh[0]
+    {
+        /*
+            EPSG:32613 -- WGS 84 / UTM zone 13N
+        */
+
+        aiMesh const *mesh = actual->mMeshes[0];
+
+        for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
+            const aiVector3D &vertex = mesh->mVertices[v];
+            std::cout << "Vertex " << v << ": (" << vertex.x << ", " << vertex.y << ", " << vertex.z << ")\n";
+        }
+    }
+
+    Assimp::Exporter exporter;
+
+    auto status = exporter.Export(actual, "assxml", (ws / "actual.xml").string());
+    EXPECT_EQ(0, status);
+}
+
+/// @brief
+/// @param --gtest_filter=TransF.c3dprototype_triangulate
+/// @param
+TEST_F(TransF, c3dprototype_triangulate) {
+    ASSERT_TRUE(fs::is_regular_file(test_data("tileset2/tileset2.json")));
+    ASSERT_TRUE(fs::is_regular_file(test_data("tileset2/bounding_boxes.glb")));
+
+    auto ws = create_ws();
+
+    auto bounding_boxes_glb = test_data("tileset2/bounding_boxes.glb").string();
+    Assimp::Importer importer;
+    // clang-format off
+        unsigned int postprocess_flags = 0 
+            // | aiProcess_GenBoundingBoxes
+            // | aiProcess_ValidateDataStructure
+            // | aiProcess_CalcTangentSpace
+            | aiProcess_Triangulate
+            // | aiProcess_GenNormals
+            // | aiProcess_JoinIdenticalVertices
+            ;
+    // clang-format on
+    auto actual = importer.ReadFile(bounding_boxes_glb, postprocess_flags);
+    ASSERT_TRUE(actual);
+
+    CONSOLE_EVAL(actual->HasMeshes());
+    CONSOLE_EVAL(actual->mNumMeshes);
+
+    Assimp::Exporter exporter;
+
+    auto status = exporter.Export(actual, "glb", (ws / "actual.glb").string());
+    EXPECT_EQ(0, status);
 }

@@ -1055,3 +1055,22 @@ TEST_F(TransF, matrix_transforms) {
         EXPECT_FLOAT_EQ(-2, v1.z);
     }
 }
+
+/// @brief 
+/// @param --gtest_filter=TransF.c3dprototype_t0
+/// @param
+TEST_F(TransF, c3dprototype_t0) {
+    EXPECT_TRUE(fs::is_regular_file(test_data("tileset2/tileset2.json")));
+    EXPECT_TRUE(fs::is_regular_file(test_data("tileset2/bounding_boxes.glb")));
+
+    {
+        auto bounding_boxes_glb = test_data("tileset2/bounding_boxes.glb").string();
+        Assimp::Importer importer;
+
+        auto actual = importer.ReadFile(bounding_boxes_glb, 0);
+        ASSERT_TRUE(actual);
+
+        CONSOLE_EVAL(actual->HasMeshes());
+        CONSOLE_EVAL(actual->mNumMeshes);
+    }
+}

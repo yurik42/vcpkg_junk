@@ -1298,6 +1298,6 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
 
     // aiVector3D min_point {496805.969, 4420721.5, 1625.33777};
     Assimp::Exporter exporter;
-
     auto actual_status = exporter.Export(actual, "glb2", (ws / "actual.glb").string());
+    EXPECT_EQ(0, actual_status);
 }

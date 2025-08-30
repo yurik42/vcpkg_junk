@@ -151,6 +151,33 @@ protected:
         }
         return "";
     }
+
+    /// @brief 
+    /// @param actual 
+    /// @return 
+    aiAABB compute_aabb (aiScene const *actual) {
+        aiVector3D sceneMin( std::numeric_limits<float>::max(),
+                             std::numeric_limits<float>::max(),
+                             std::numeric_limits<float>::max() );
+        aiVector3D sceneMax( std::numeric_limits<float>::lowest(),
+                             std::numeric_limits<float>::lowest(),
+                             std::numeric_limits<float>::lowest() );
+
+        for (unsigned int i = 0; i < actual->mNumMeshes; ++i) {
+            const aiMesh *mesh = actual->mMeshes[i];
+            for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
+                const aiVector3D &vertex = mesh->mVertices[v];
+                sceneMin.x = std::min(sceneMin.x, vertex.x);
+                sceneMin.y = std::min(sceneMin.y, vertex.y);
+                sceneMin.z = std::min(sceneMin.z, vertex.z);
+                sceneMax.x = std::max(sceneMax.x, vertex.x);
+                sceneMax.y = std::max(sceneMax.y, vertex.y);
+                sceneMax.z = std::max(sceneMax.z, vertex.z);
+            }
+        }
+        // CONSOLE("Scene AABB min: " << sceneMin << " max: " << sceneMax);
+        return aiAABB {sceneMin, sceneMax};
+    };
 };
 
 TEST_F(AssimpF, get_longest_substring_test) {
@@ -1099,30 +1126,6 @@ TEST_F(TransF, c3dprototype_t0) {
         }
     }
 
-    auto compute_aabb = [] (aiScene const *actual) -> aiAABB {
-        aiVector3D sceneMin( std::numeric_limits<float>::max(),
-                             std::numeric_limits<float>::max(),
-                             std::numeric_limits<float>::max() );
-        aiVector3D sceneMax( std::numeric_limits<float>::lowest(),
-                             std::numeric_limits<float>::lowest(),
-                             std::numeric_limits<float>::lowest() );
-
-        for (unsigned int i = 0; i < actual->mNumMeshes; ++i) {
-            const aiMesh *mesh = actual->mMeshes[i];
-            for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
-                const aiVector3D &vertex = mesh->mVertices[v];
-                sceneMin.x = std::min(sceneMin.x, vertex.x);
-                sceneMin.y = std::min(sceneMin.y, vertex.y);
-                sceneMin.z = std::min(sceneMin.z, vertex.z);
-                sceneMax.x = std::max(sceneMax.x, vertex.x);
-                sceneMax.y = std::max(sceneMax.y, vertex.y);
-                sceneMax.z = std::max(sceneMax.z, vertex.z);
-            }
-        }
-        // CONSOLE("Scene AABB min: " << sceneMin << " max: " << sceneMax);
-        return aiAABB {sceneMin, sceneMax};
-    };
-
     auto bounding_box = compute_aabb(actual);
     CONSOLE("Scene AABB min: " << bounding_box.mMin << " max: " << bounding_box.mMax);
 
@@ -1254,4 +1257,47 @@ TEST_F(TransF, c3dprototype_triangulate) {
 
     auto status = exporter.Export(actual, "glb", (ws / "actual.glb").string());
     EXPECT_EQ(0, status);
+}
+
+/// @brief Load the original GLB model and translate the coordinates to (0,0,0)
+/// @param --gtest_filter=TransF.c3dprototype_translate_coordinates
+/// @param
+TEST_F(TransF, c3dprototype_translate_coordinates) {
+    ASSERT_TRUE(fs::is_regular_file(test_data("tileset2/tileset2.json")));
+    ASSERT_TRUE(fs::is_regular_file(test_data("tileset2/bounding_boxes.glb")));
+
+    auto ws = create_ws();
+
+    auto bounding_boxes_glb = test_data("tileset2/bounding_boxes.glb").string();
+    Assimp::Importer importer;
+    // clang-format off
+    unsigned int postprocess_flags = 0 
+            | aiProcess_GenBoundingBoxes
+            ;
+    // clang-format on
+
+    // The original coordinates are in UTM 13N
+    auto actual = importer.ReadFile(bounding_boxes_glb, postprocess_flags);
+    ASSERT_TRUE(actual);
+
+    CONSOLE(std::setprecision(15));
+    CONSOLE_EVAL(actual->mRootNode->mTransformation);
+
+    EXPECT_TRUE(aiMatrix4x4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1) ==
+                actual->mRootNode->mTransformation);
+
+    auto bounding_box = this->compute_aabb(actual);
+
+    aiMatrix4x4 translate;
+    aiMatrix4x4::Translation(-bounding_box.mMin, translate);
+    CONSOLE_EVAL(translate);
+
+    /* update the root transform matrix */
+    actual->mRootNode->mTransformation = translate * actual->mRootNode->mTransformation;
+    CONSOLE_EVAL(actual->mRootNode->mTransformation);
+
+    // aiVector3D min_point {496805.969, 4420721.5, 1625.33777};
+    Assimp::Exporter exporter;
+
+    auto actual_status = exporter.Export(actual, "glb2", (ws / "actual.glb").string());
 }

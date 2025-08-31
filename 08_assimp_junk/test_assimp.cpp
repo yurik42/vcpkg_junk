@@ -152,16 +152,16 @@ protected:
         return "";
     }
 
-    /// @brief 
-    /// @param actual 
-    /// @return 
-    aiAABB compute_aabb (aiScene const *actual) {
-        aiVector3D sceneMin( std::numeric_limits<float>::max(),
-                             std::numeric_limits<float>::max(),
-                             std::numeric_limits<float>::max() );
-        aiVector3D sceneMax( std::numeric_limits<float>::lowest(),
-                             std::numeric_limits<float>::lowest(),
-                             std::numeric_limits<float>::lowest() );
+    /// @brief
+    /// @param actual
+    /// @return
+    aiAABB compute_aabb(aiScene const *actual) {
+        aiVector3D sceneMin(std::numeric_limits<float>::max(),
+                            std::numeric_limits<float>::max(),
+                            std::numeric_limits<float>::max());
+        aiVector3D sceneMax(std::numeric_limits<float>::lowest(),
+                            std::numeric_limits<float>::lowest(),
+                            std::numeric_limits<float>::lowest());
 
         for (unsigned int i = 0; i < actual->mNumMeshes; ++i) {
             const aiMesh *mesh = actual->mMeshes[i];
@@ -176,7 +176,7 @@ protected:
             }
         }
         // CONSOLE("Scene AABB min: " << sceneMin << " max: " << sceneMax);
-        return aiAABB {sceneMin, sceneMax};
+        return aiAABB{sceneMin, sceneMax};
     };
 };
 
@@ -1122,37 +1122,44 @@ TEST_F(TransF, c3dprototype_t0) {
 
         for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
             const aiVector3D &vertex = mesh->mVertices[v];
-            std::cout << "Vertex " << v << ": (" << vertex.x << ", " << vertex.y << ", " << vertex.z << ")\n";
+            std::cout << "Vertex " << v << ": (" << vertex.x << ", " << vertex.y
+                      << ", " << vertex.z << ")\n";
         }
     }
 
     auto bounding_box = compute_aabb(actual);
-    CONSOLE("Scene AABB min: " << bounding_box.mMin << " max: " << bounding_box.mMax);
+    CONSOLE("Scene AABB min: " << bounding_box.mMin
+                               << " max: " << bounding_box.mMax);
 
     Assimp::Exporter exporter;
 
-    auto status = exporter.Export(actual, "assxml", (ws / "actual.xml").string());
+    auto status =
+        exporter.Export(actual, "assxml", (ws / "actual.xml").string());
     EXPECT_EQ(0, status);
 }
 
-/// @brief 
+/// @brief
 /// @param --gtest_filter=TransF.c3dprototype_bb
-/// @param  
+/// @param
 TEST_F(TransF, c3dprototype_bb) {
     auto actual_bb = aiAABB{{496805.969, 4420721.5, 1625.33777},
                             {496866.031, 4420784, 1636.51453}};
 
     aiVector3D longitude_latitude_min = {-105.0373839395, 39.9366031861, 0.0};
 
-    // echo "496805.969 4420721.5" | cs2cs +proj=utm +zone=13 +datum=WGS84 +units=m +to +proj=latlong +datum=WGS84 -f "%.10f"
-    // echo "496866.031 4420784" | cs2cs +proj=utm +zone=13 +datum=WGS84 +units=m +to +proj=latlong +datum=WGS84 -f "%.10f"
+    // echo "496805.969 4420721.5" | cs2cs +proj=utm +zone=13 +datum=WGS84
+    // +units=m +to +proj=latlong +datum=WGS84 -f "%.10f" echo "496866.031
+    // 4420784" | cs2cs +proj=utm +zone=13 +datum=WGS84 +units=m +to
+    // +proj=latlong +datum=WGS84 -f "%.10f"
 
     /*
         Cesium 3D Tiles boundingVolume.box format:
-        [centerX, centerY, centerZ, halfAxisXx, halfAxisXy, halfAxisXz, halfAxisYx, halfAxisYy, halfAxisYz, halfAxisZx, halfAxisZy, halfAxisZz]
+        [centerX, centerY, centerZ, halfAxisXx, halfAxisXy, halfAxisXz,
+       halfAxisYx, halfAxisYy, halfAxisYz, halfAxisZx, halfAxisZy, halfAxisZz]
         where:
         - center: midpoint of AABB
-        - half axes: half the size along each axis (for axis-aligned box, these are half extents along X, Y, Z)
+        - half axes: half the size along each axis (for axis-aligned box, these
+       are half extents along X, Y, Z)
     */
 
     aiVector3D center = (actual_bb.mMin + actual_bb.mMax) * 0.5f;
@@ -1160,23 +1167,20 @@ TEST_F(TransF, c3dprototype_bb) {
 
     // Axis-aligned box: half axes are just half extents along X, Y, Z
     std::array<double, 12> cesium_box = {
-        center.x, center.y, center.z,
-        half_extent.x, 0, 0,
-        0, half_extent.y, 0,
-        0, 0, half_extent.z
-    };
+        center.x, center.y, center.z, half_extent.x, 0, 0, 0, half_extent.y,
+        0,        0,        0,        half_extent.z};
 
     CONSOLE("Cesium boundingVolume.box: ["
-        << std::setprecision(16)
-        << cesium_box[0] << ", " << cesium_box[1] << ", " << cesium_box[2] << ", "
-        << cesium_box[3] << ", " << cesium_box[4] << ", " << cesium_box[5] << ", "
-        << cesium_box[6] << ", " << cesium_box[7] << ", " << cesium_box[8] << ", "
-        << cesium_box[9] << ", " << cesium_box[10] << ", " << cesium_box[11] << "]"
-    );
+            << std::setprecision(16) << cesium_box[0] << ", " << cesium_box[1]
+            << ", " << cesium_box[2] << ", " << cesium_box[3] << ", "
+            << cesium_box[4] << ", " << cesium_box[5] << ", " << cesium_box[6]
+            << ", " << cesium_box[7] << ", " << cesium_box[8] << ", "
+            << cesium_box[9] << ", " << cesium_box[10] << ", " << cesium_box[11]
+            << "]");
 
     /*
-        To transform from local coordinates (e.g., UTM) to ECEF (Earth-Centered, Earth-Fixed),
-        you need to:
+        To transform from local coordinates (e.g., UTM) to ECEF (Earth-Centered,
+       Earth-Fixed), you need to:
         1. Convert local coordinates to geodetic (longitude, latitude, height).
         2. Convert geodetic to ECEF.
 
@@ -1196,7 +1200,7 @@ TEST_F(TransF, c3dprototype_bb) {
         double z;
     };
 
-    auto geodetic_to_ecef = [](const Geodetic& geo) -> ECEF {
+    auto geodetic_to_ecef = [](const Geodetic &geo) -> ECEF {
         // WGS84 constants
         constexpr double a = 6378137.0;           // semi-major axis
         constexpr double f = 1.0 / 298.257223563; // flattening
@@ -1223,7 +1227,8 @@ TEST_F(TransF, c3dprototype_bb) {
 
     auto ecef_center = geodetic_to_ecef(geo_center);
 
-    CONSOLE("ECEF center: x=" << ecef_center.x << " y=" << ecef_center.y << " z=" << ecef_center.z);
+    CONSOLE("ECEF center: x=" << ecef_center.x << " y=" << ecef_center.y
+                              << " z=" << ecef_center.z);
 }
 
 /// @brief

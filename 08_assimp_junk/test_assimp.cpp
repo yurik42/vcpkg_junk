@@ -1286,7 +1286,7 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
     EXPECT_TRUE(aiMatrix4x4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1) ==
                 actual->mRootNode->mTransformation);
 
-    auto bounding_box = this->compute_aabb(actual);
+    auto bounding_box = compute_aabb(actual);
 
     aiMatrix4x4 translate;
     aiMatrix4x4::Translation(-bounding_box.mMin, translate);
@@ -1299,5 +1299,23 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
     // aiVector3D min_point {496805.969, 4420721.5, 1625.33777};
     Assimp::Exporter exporter;
     auto actual_status = exporter.Export(actual, "glb2", (ws / "actual.glb").string());
-    EXPECT_EQ(0, actual_status);
+    ASSERT_EQ(0, actual_status);
+    ASSERT_TRUE(fs::is_regular_file(ws / "actual.glb"));
+
+    {
+        // Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE,
+        //                               aiDefaultLogStream_STDOUT);
+        // ASSIMP_LOG_DEBUG("Assimp log redirected to stdout");
+
+        // verify the *.GLB file
+        Assimp::Importer importer;
+
+        auto actual2 =
+            importer.ReadFile((ws / "actual.glb").string(), postprocess_flags);
+        ASSERT_TRUE(actual2);
+        auto bounding_volume = compute_aabb(actual2);
+        CONSOLE("Scene AABB min: " << bounding_volume.mMin
+                                   << " max: " << bounding_volume.mMax);
+        CONSOLE_EVAL(actual->mRootNode->mTransformation);
+    }
 }

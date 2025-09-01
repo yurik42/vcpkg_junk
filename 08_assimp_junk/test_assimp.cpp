@@ -152,7 +152,7 @@ protected:
         return "";
     }
 
-    /// @brief
+    /// @brief Compute the bounding volume of a scene w/o respect to transforms
     /// @param actual
     /// @return
     aiAABB compute_aabb(aiScene const *actual) {
@@ -1277,13 +1277,13 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
             test_data("tileset2/bounding_boxes.glb").string();
         Assimp::Importer importer;
         // clang-format off
-    unsigned int postprocess_flags = 0 
-            | aiProcess_GenBoundingBoxes
-            | aiProcess_ValidateDataStructure
-            | aiProcess_CalcTangentSpace
-            | aiProcess_Triangulate
-            | aiProcess_GenNormals
-            | aiProcess_JoinIdenticalVertices
+        unsigned int postprocess_flags = 0 
+            //| aiProcess_GenBoundingBoxes
+            //| aiProcess_ValidateDataStructure
+            //| aiProcess_CalcTangentSpace
+            //| aiProcess_Triangulate
+            //| aiProcess_GenNormals
+            //| aiProcess_JoinIdenticalVertices
             ;
         // clang-format on
 
@@ -1292,29 +1292,45 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
         ASSERT_TRUE(actual);
 
         CONSOLE(std::setprecision(15));
+
+        CONSOLE_EVAL(actual->mMeshes[0]->mAABB);
         CONSOLE_EVAL(actual->mRootNode->mTransformation);
 
-        EXPECT_TRUE(aiMatrix4x4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0,
-                                1) == actual->mRootNode->mTransformation);
+        EXPECT_EQ(aiMatrix4x4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0,
+                                1), actual->mRootNode->mTransformation);
 
         auto bounding_box = compute_aabb(actual);
+        CONSOLE_EVAL(bounding_box.mMin);
+        CONSOLE_EVAL(bounding_box.mMax);
+        //mMin : {496805.969, 4420721.5, 1625.33777}
+        //mMax : {496866.031, 4420784, 1636.51453}
 
         aiMatrix4x4 translate;
         aiMatrix4x4::Translation(-bounding_box.mMin, translate);
         CONSOLE_EVAL(translate);
+        {
+            // Verify sure the transform works as expected - moves min_point to (0,0,0)
+            aiVector3D min_point{496805.969, 4420721.5, 1625.33777};
+            EXPECT_EQ(min_point, bounding_box.mMin);
+            CONSOLE_EVAL(translate * min_point);
+            EXPECT_TRUE(aiVector3D(0, 0, 0) == translate * min_point);
+            aiVector3D max_point { 496866.031, 4420784, 1636.51453 };
+            CONSOLE_EVAL(translate * max_point);
+            EXPECT_TRUE(aiVector3D(60.0625, 62.5, 11.1767578) ==
+                        translate * max_point);
+            EXPECT_TRUE(max_point - min_point == translate * max_point);
+        }
 
-        /* update the root transform matrix */
+        /* update the root transform to map min to (0,0,0) */
         actual->mRootNode->mTransformation =
             translate * actual->mRootNode->mTransformation;
         CONSOLE_EVAL(actual->mRootNode->mTransformation);
 
-        // aiVector3D min_point {496805.969, 4420721.5, 1625.33777};
         Assimp::Exporter exporter;
-
         auto actual_status =
-            exporter.Export(actual, "glb", (ws / "model.glb").string());
+            exporter.Export(actual, "glb2", (ws / "actual.glb").string());
         ASSERT_EQ(0, actual_status);
-        exporter.Export(actual, "assxml", (ws / "model.xml").string());
+        exporter.Export(actual, "assxml", (ws / "actual.xml").string());
     }
     // verify the saved model
     {
@@ -1323,8 +1339,8 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
                                       aiDefaultLogStream_STDOUT);
 
         Assimp::Importer importer;
-        auto model = importer.ReadFile((ws / "model.glb").string(), 0);
+        auto model = importer.ReadFile((ws / "actual.glb").string(), 0);
         ASSERT_TRUE(model);
-        CONSOLE_EVAL(compute_aabb(model));
+        CONSOLE_EVAL(model->mRootNode->mTransformation);
     }
 }

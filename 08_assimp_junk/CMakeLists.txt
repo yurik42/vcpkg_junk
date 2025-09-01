@@ -65,6 +65,14 @@ target_link_libraries(cmd_aiscene_bounding_box_08
 )
 set_target_properties(cmd_aiscene_bounding_box_08 PROPERTIES FOLDER "Apps")
 
+find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
+add_executable(cmd_tinygltf_example_08
+    cmd_tinygltf_example.cpp
+)
+target_include_directories(cmd_tinygltf_example_08
+    PRIVATE ${TINYGLTF_INCLUDE_DIRS})
+set_target_properties(cmd_tinygltf_example_08 PROPERTIES FOLDER "Apps")
+
 if(BUILD_TESTING)
     enable_testing()
     

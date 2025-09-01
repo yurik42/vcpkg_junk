@@ -1,6 +1,7 @@
 {
   "dependencies": [
     "assimp",
+    "tinygltf",
     "glm",
     "boost-program-options",
     "boost-filesystem",

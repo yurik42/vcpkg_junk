@@ -1,12 +1,12 @@
 {
   "dependencies": [
     "assimp",
+    "glm",
     "boost-program-options",
     "boost-filesystem",
     "boost-geometry",
     "json-c",
-    "eigen3",
-    "gtest"
+    "eigen3"
   ],
   "features": {
     "tests": {

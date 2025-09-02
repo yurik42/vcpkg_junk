@@ -1340,14 +1340,17 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
         auto actual_status =
             exporter.Export(actual, "glb2", (ws / "actual.glb").string());
         ASSERT_EQ(0, actual_status);
-        exporter.Export(actual, "assxml", (ws / "actual.xml").string());
+        ASSERT_EQ(0, exporter.Export(actual, "assxml", (ws / "actual.xml").string()));
+        ASSERT_EQ(0, exporter.Export(actual, "ply", (ws / "actual.ply").string()));
     }
     // verify the saved model
     {
+#if 0
         // Create default logger that outputs to console
         Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE,
                                       aiDefaultLogStream_STDOUT);
 
+#endif
         Assimp::Importer importer;
         auto model = importer.ReadFile((ws / "actual.glb").string(), 0);
         ASSERT_TRUE(model);
@@ -1369,6 +1372,26 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
             EXPECT_TRUE(warn.empty()) << "Warning: " << warn;
             CONSOLE_EVAL(model.meshes.size());
             EXPECT_EQ(9, model.meshes.size());
+            EXPECT_EQ(10, model.nodes.size());
+
+            auto vector2str = [](std::vector<double> const &v) {
+                std::ostringstream ss;
+                ss << "{";
+                auto vv = v.begin();
+                if (vv != v.end())
+                    ss << *vv++;
+                while (vv != v.end())
+                    ss << ", " << *vv++;
+                ss << "}";
+                return ss.str();
+            };
+
+            for (auto const &np : model.nodes) {
+                CONSOLE_EVAL(np.extensions_json_string);
+                CONSOLE_EVAL(np.children.size());
+                CONSOLE_EVAL(vector2str(np.matrix));
+                CONSOLE("\n");
+            }
         }
     }
 }

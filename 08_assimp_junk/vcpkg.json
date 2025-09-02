@@ -2,6 +2,7 @@
   "dependencies": [
     "assimp",
     "glm",
+    "tinygltf",
     "boost-program-options",
     "boost-filesystem",
     "boost-geometry",
@@ -12,7 +13,6 @@
     "tests": {
       "description": "Build Tests",
       "dependencies": [
-        "tinygltf",
         "gtest"
       ]
     }

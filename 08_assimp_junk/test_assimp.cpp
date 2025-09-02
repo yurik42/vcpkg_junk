@@ -1352,9 +1352,11 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
         auto model = importer.ReadFile((ws / "actual.glb").string(), 0);
         ASSERT_TRUE(model);
         CONSOLE_EVAL(model->mRootNode->mTransformation);
+        CONSOLE_EVAL(model->mNumMeshes);
+        EXPECT_EQ(9, model->mNumMeshes);
     }
     {
-        // verify with tinygltf
+        // verify with tinygltf::TinyGLTF
         {
             tinygltf::TinyGLTF loader;
             tinygltf::Model model;
@@ -1364,11 +1366,9 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
                 &model, &err, &warn, (ws / "actual.glb").string());
 
             ASSERT_TRUE(success) << "Failed to load GLTF: " << err;
-
-            if (!warn.empty()) 
-                CONSOLE("Warning: " << warn);
-            
+            EXPECT_TRUE(warn.empty()) << "Warning: " << warn;
             CONSOLE_EVAL(model.meshes.size());
+            EXPECT_EQ(9, model.meshes.size());
         }
     }
 }

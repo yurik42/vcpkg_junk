@@ -12,6 +12,7 @@
     "tests": {
       "description": "Build Tests",
       "dependencies": [
+        "tinygltf",
         "gtest"
       ]
     }

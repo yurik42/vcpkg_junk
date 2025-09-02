@@ -70,9 +70,9 @@ if(BUILD_TESTING)
     
     include(GoogleTest)
 
-    list(APPEND VCPKG_MANIFEST_FEATURES "tests")
-
     find_package(GTest REQUIRED)
+
+    find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
 
     add_executable(test_08
         TilesetJson.h
@@ -83,7 +83,7 @@ if(BUILD_TESTING)
 
         .editorconfig
     )
-    target_include_directories(test_08 PRIVATE ${Stb_INCLUDE_DIR})
+    target_include_directories(test_08 PRIVATE ${Stb_INCLUDE_DIR} ${TINYGLTF_INCLUDE_DIRS})
     target_link_libraries(
         test_08
         PRIVATE

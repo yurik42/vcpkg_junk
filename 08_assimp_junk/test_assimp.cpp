@@ -27,6 +27,16 @@ namespace fs = std::filesystem;
 #include "assimp_aux.h"
 #include "meshtoolbox.h"
 
+// Define implementation macros once per project.
+#define TINYGLTF_IMPLEMENTATION
+
+#define TINYGLTF_NO_INCLUDE_STB_IMAGE
+#define TINYGLTF_NO_INCLUDE_STB_IMAGE_WRITE
+
+//#define STB_IMAGE_IMPLEMENTATION // is already defined above
+//#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <tiny_gltf.h>
+
 #include "../common/CONSOLE.h"
 
 class AssimpF : public testing::Test {
@@ -1342,5 +1352,23 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
         auto model = importer.ReadFile((ws / "actual.glb").string(), 0);
         ASSERT_TRUE(model);
         CONSOLE_EVAL(model->mRootNode->mTransformation);
+    }
+    {
+        // verify with tinygltf
+        {
+            tinygltf::TinyGLTF loader;
+            tinygltf::Model model;
+            std::string err, warn;
+
+            bool success = loader.LoadBinaryFromFile(
+                &model, &err, &warn, (ws / "actual.glb").string());
+
+            ASSERT_TRUE(success) << "Failed to load GLTF: " << err;
+
+            if (!warn.empty()) 
+                CONSOLE("Warning: " << warn);
+            
+            CONSOLE_EVAL(model.meshes.size());
+        }
     }
 }

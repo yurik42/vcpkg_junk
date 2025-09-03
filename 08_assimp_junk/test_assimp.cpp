@@ -326,6 +326,51 @@ TEST_F(AssimpF, load_textured_cube) {
     }
 }
 
+/// @brief Load a textured (jpg) cube and save it as assxml
+/// @param --gtest_filter=AssimpF.load_textured_cube_jpg
+/// @param
+TEST_F(AssimpF, load_textured_cube_jpg) {
+    auto ws = create_ws();
+
+    auto BoxTextured_gltf = test_data("BoxTextured-glTF_jpg/BoxTextured.gltf");
+    ASSERT_TRUE(fs::is_regular_file(BoxTextured_gltf));
+
+    Assimp::Importer sot;
+    {
+        aiScene const *actual_scene =
+            sot.ReadFile(BoxTextured_gltf.string().c_str(), 0);
+        ASSERT_NE(nullptr, actual_scene);
+
+        CONSOLE_EVAL(actual_scene->mNumMeshes);
+        CONSOLE_EVAL(actual_scene->mNumTextures);
+        CONSOLE_EVAL(actual_scene->mNumMaterials);
+        CONSOLE_EVAL(actual_scene->mNumSkeletons);
+        // CONSOLE_EVAL(actual_scene->mNumTextures);
+
+        ASSERT_EQ(1, actual_scene->mNumMeshes);
+        {
+            // dump the mesh
+            aiMesh const *mp = actual_scene->mMeshes[0];
+            CONSOLE_EVAL(mp->mNumUVComponents[0]);
+            CONSOLE_EVAL(mp->mNumUVComponents[1]);
+            CONSOLE_EVAL(mp->mNumUVComponents[2]);
+            CONSOLE_EVAL(mp->mNumUVComponents[3]);
+
+            aiVector3D *textCoord_0 = mp->mTextureCoords[0];
+            CONSOLE_EVAL(textCoord_0[0]);
+            CONSOLE_EVAL(textCoord_0[1]);
+            CONSOLE_EVAL(textCoord_0[2]);
+            CONSOLE_EVAL(textCoord_0[3]);
+            CONSOLE_EVAL(textCoord_0[4]);
+        }
+
+        Assimp::Exporter exporter;
+        auto rc = exporter.Export(actual_scene, "assxml",
+                                  (ws / "BoxTextured.gltf.xml").string());
+        ASSERT_EQ(0, rc);
+    }
+}
+
 /// @brief Load a textured cube and save it as assxml
 /// @param --gtest_filter=AssimpF.load_textured_cube_embedded
 TEST_F(AssimpF, load_textured_cube_embedded) {
@@ -730,6 +775,28 @@ TEST_F(AssimpF, meshtoolbox_stb_image_jpg) {
     stbi_image_free(data);
 }
 
+/// @brief Read a small jpg file with stb library
+/// @param --gtest_filter=AssimpF.stb_read_jpg
+/// @param  
+TEST_F(AssimpF, stb_read_jpg) {
+    auto logo_jpg = test_data("BoxTextured-glTF_jpg/CesiumLogoFlat.jpg");
+    ASSERT_TRUE(fs::is_regular_file(logo_jpg));
+
+    int width, height, channels;
+    stbi_uc *data =
+        stbi_load(logo_jpg.string().c_str(), &width, &height, &channels, 0);
+    ASSERT_TRUE(data) << "Failed to load image: " << logo_jpg;
+
+    auto stbi_uc_deleter = [](stbi_uc *p) {
+        if (p)
+            stbi_image_free(p);
+        CONSOLE("...deleted");
+    };
+    auto on_exit = std::unique_ptr<stbi_uc, decltype(stbi_uc_deleter)>(data, stbi_uc_deleter);
+    ASSERT_EQ(211, width);
+    ASSERT_EQ(211, height);
+    ASSERT_EQ(3, channels);
+}
 
 /// @brief Create a PNG file
 /// @param --gtest_filter=AssimpF.meshtoolbox_write_stb_image

@@ -796,9 +796,6 @@ TEST_F(AssimpF, stb_read_jpg) {
     ASSERT_EQ(211, width);
     ASSERT_EQ(211, height);
     ASSERT_EQ(3, channels);
-
-    CONSOLE_EVAL((size_t)(33000 * 33000 *4));
-    CONSOLE_EVAL((size_t)33000 * 33000 * 4);
 }
 
 /// @brief Create a PNG file

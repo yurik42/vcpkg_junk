@@ -27,6 +27,16 @@ namespace fs = std::filesystem;
 #include "assimp_aux.h"
 #include "meshtoolbox.h"
 
+// Define implementation macros once per project.
+#define TINYGLTF_IMPLEMENTATION
+
+#define TINYGLTF_NO_INCLUDE_STB_IMAGE
+#define TINYGLTF_NO_INCLUDE_STB_IMAGE_WRITE
+
+//#define STB_IMAGE_IMPLEMENTATION // is already defined above
+//#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <tiny_gltf.h>
+
 #include "../common/CONSOLE.h"
 
 class AssimpF : public testing::Test {
@@ -689,6 +699,38 @@ TEST_F(AssimpF, meshtoolbox_stb_image) {
     stbi_image_free(data);
 }
 
+/// @brief Load a large JPG file
+/// @param --gtest_filter=AssimpF.meshtoolbox_stb_image_jpg
+/// @param  
+TEST_F(AssimpF, meshtoolbox_stb_image_jpg) {
+    const char *filename_jpg = R"(C:\home\work\GM-19017\out\scene_0_dense_mesh_material_0_map_kd.jpg)";
+    if (!fs::is_regular_file(filename_jpg))
+        GTEST_SKIP();
+
+    int width, height, channels;
+    auto data = stbi_load(filename_jpg, &width, &height, &channels, 0);
+    ASSERT_TRUE(data) << "Failed to load image: " << filename_jpg;
+
+    ASSERT_EQ(211, width);
+    ASSERT_EQ(211, height);
+    ASSERT_EQ(3, channels);
+
+    // Optionally, check a pixel value
+    if (width > 0 && height > 0 && channels >= 3) {
+        int idx = 0; // top-left pixel
+        unsigned char r = data[idx * channels + 0];
+        unsigned char g = data[idx * channels + 1];
+        unsigned char b = data[idx * channels + 2];
+        CONSOLE_EVAL(unsigned(r));
+        CONSOLE_EVAL(unsigned(g));
+        CONSOLE_EVAL(unsigned(b));
+    }
+
+    // Free the image memory
+    stbi_image_free(data);
+}
+
+
 /// @brief Create a PNG file
 /// @param --gtest_filter=AssimpF.meshtoolbox_write_stb_image
 TEST_F(AssimpF, meshtoolbox_write_stb_image) {
@@ -1330,17 +1372,58 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
         auto actual_status =
             exporter.Export(actual, "glb2", (ws / "actual.glb").string());
         ASSERT_EQ(0, actual_status);
-        exporter.Export(actual, "assxml", (ws / "actual.xml").string());
+        ASSERT_EQ(0, exporter.Export(actual, "assxml", (ws / "actual.xml").string()));
+        ASSERT_EQ(0, exporter.Export(actual, "ply", (ws / "actual.ply").string()));
     }
     // verify the saved model
     {
+#if 0
         // Create default logger that outputs to console
         Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE,
                                       aiDefaultLogStream_STDOUT);
 
+#endif
         Assimp::Importer importer;
         auto model = importer.ReadFile((ws / "actual.glb").string(), 0);
         ASSERT_TRUE(model);
         CONSOLE_EVAL(model->mRootNode->mTransformation);
+        CONSOLE_EVAL(model->mNumMeshes);
+        EXPECT_EQ(9, model->mNumMeshes);
+    }
+    {
+        // verify with tinygltf::TinyGLTF
+        {
+            tinygltf::TinyGLTF loader;
+            tinygltf::Model model;
+            std::string err, warn;
+
+            bool success = loader.LoadBinaryFromFile(
+                &model, &err, &warn, (ws / "actual.glb").string());
+
+            ASSERT_TRUE(success) << "Failed to load GLTF: " << err;
+            EXPECT_TRUE(warn.empty()) << "Warning: " << warn;
+            CONSOLE_EVAL(model.meshes.size());
+            EXPECT_EQ(9, model.meshes.size());
+            EXPECT_EQ(10, model.nodes.size());
+
+            auto vector2str = [](std::vector<double> const &v) {
+                std::ostringstream ss;
+                ss << "{";
+                auto vv = v.begin();
+                if (vv != v.end())
+                    ss << *vv++;
+                while (vv != v.end())
+                    ss << ", " << *vv++;
+                ss << "}";
+                return ss.str();
+            };
+
+            for (auto const &np : model.nodes) {
+                CONSOLE_EVAL(np.extensions_json_string);
+                CONSOLE_EVAL(np.children.size());
+                CONSOLE_EVAL(vector2str(np.matrix));
+                CONSOLE("\n");
+            }
+        }
     }
 }

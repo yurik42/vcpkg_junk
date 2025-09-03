@@ -1,9 +1,25 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+//#include <glm/gtc/matrix_transform.hpp>
 #include <limits>
-#include <algorithm>
+//#include <algorithm>
+
+
+#include <assimp/version.h>
+
+// Method 1: Using version macros (compile-time)
+void printCompileTimeVersion() {
+    printf("=== COMPILE-TIME VERSION INFO ===\n");
+    printf("Assimp Major Version: %d\n", aiGetVersionMajor());
+    printf("Assimp Minor Version: %d\n", aiGetVersionMinor());
+    printf("Assimp Patch Version: %d\n", aiGetVersionPatch());
+    printf("Assimp Revision: %d\n", aiGetVersionRevision());
+    printf("Full Version: %d.%d.%d.%d\n", aiGetVersionMajor(),
+           aiGetVersionMinor(), aiGetVersionPatch(), aiGetVersionRevision());
+    printf("\n");
+}
+
 
 struct BoundingBox {
     glm::vec3 min{std::numeric_limits<float>::max()};
@@ -134,6 +150,8 @@ void printBoundingBox(const BoundingBox& bbox) {
 
 int main() {
 
+    printCompileTimeVersion();
+
     namespace fs = std::filesystem;
     auto test_data = [](const char *relative_path) {
         auto test_data_dir = fs::absolute(__FILE__).parent_path() / "test_data";
@@ -142,9 +160,17 @@ int main() {
 
     auto bounding_boxes_glb = test_data("tileset2/bounding_boxes.glb").string();
 
+    bounding_boxes_glb = R"(C:\home\work\GM-19017\out\model.glb)";
+
     // Assuming you have loaded an aiScene
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(bounding_boxes_glb, 0);
+
+    if (!scene) {
+        printf("Cannot open %s. Error: %s\n", bounding_boxes_glb.c_str(),
+               importer.GetErrorString());
+        return 1;
+    }
     
     // Compute bounding box
     BoundingBox bbox = computeSceneBoundingBox(scene);

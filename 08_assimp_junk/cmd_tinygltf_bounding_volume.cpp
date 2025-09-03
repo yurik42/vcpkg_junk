@@ -357,6 +357,8 @@ int main() {
 
     auto filename = test_data("tileset2/bounding_boxes.glb").string();
 
+    filename = R"(C:\home\work\GM-19017\out\model.glb)";
+
     std::cout << "=== TINYGLTF BOUNDING VOLUME CALCULATOR ===\n";
     
     // Load GLTF model
@@ -407,8 +409,10 @@ int main() {
         model.meshes[0].primitives[0].attributes["POSITION"] = 0;
     }
 #else
-    if (!success)
+    if (!success) {
+        std::cout << "Cannot load " << filename << ". Error: " << err << "\n";
         return 1;
+    }
 #endif
     if (!warn.empty()) {
         std::cout << "Warning: " << warn << std::endl;

@@ -699,6 +699,38 @@ TEST_F(AssimpF, meshtoolbox_stb_image) {
     stbi_image_free(data);
 }
 
+/// @brief Load a large JPG file
+/// @param --gtest_filter=AssimpF.meshtoolbox_stb_image_jpg
+/// @param  
+TEST_F(AssimpF, meshtoolbox_stb_image_jpg) {
+    const char *filename_jpg = R"(C:\home\work\GM-19017\out\scene_0_dense_mesh_material_0_map_kd.jpg)";
+    if (!fs::is_regular_file(filename_jpg))
+        GTEST_SKIP();
+
+    int width, height, channels;
+    auto data = stbi_load(filename_jpg, &width, &height, &channels, 0);
+    ASSERT_TRUE(data) << "Failed to load image: " << filename_jpg;
+
+    ASSERT_EQ(211, width);
+    ASSERT_EQ(211, height);
+    ASSERT_EQ(3, channels);
+
+    // Optionally, check a pixel value
+    if (width > 0 && height > 0 && channels >= 3) {
+        int idx = 0; // top-left pixel
+        unsigned char r = data[idx * channels + 0];
+        unsigned char g = data[idx * channels + 1];
+        unsigned char b = data[idx * channels + 2];
+        CONSOLE_EVAL(unsigned(r));
+        CONSOLE_EVAL(unsigned(g));
+        CONSOLE_EVAL(unsigned(b));
+    }
+
+    // Free the image memory
+    stbi_image_free(data);
+}
+
+
 /// @brief Create a PNG file
 /// @param --gtest_filter=AssimpF.meshtoolbox_write_stb_image
 TEST_F(AssimpF, meshtoolbox_write_stb_image) {

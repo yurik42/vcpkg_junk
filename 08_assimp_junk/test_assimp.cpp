@@ -1554,6 +1554,54 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
 */
 
 
+static const char *cropped_model_glb = R"({
+  "asset": {
+    "version": "1.1"
+  },
+  "geometricError": 4096,
+  "root": {
+    "boundingVolume": {
+      "box": [
+        496840.7947318554,
+        4420745.123109758,
+        1628.3355102539062,
+        1.4763270616531372,
+        0,
+        0,
+        0,
+        1.3503844738006592,
+        0,
+        0,
+        0,
+        1.38446044921875
+      ]
+    },
+    "geometricError": 512,
+    "content": {
+      "uri": "model.glb"
+    },
+    "refine": "ADD",
+    "transform": [
+      0.9657585935309204,
+      -0.2594423616551052,
+      0,
+      0,
+      0.16654706558975313,
+      0.6199614388126924,
+      0.7667528215329492,
+      0,
+      -0.1989281628242237,
+      -0.7404981265095258,
+      0.6419424512144849,
+      0,
+      -1270544.8042035468,
+      -4729526.648222642,
+      4072608.8590562753,
+      1
+    ]
+  }
+})";
+
 /// @brief Load a GLB file and generate tileset.json
 /// @param --gtest_filter=TransF.c3dprototype_make_tileset_json
 /// @param  
@@ -1583,6 +1631,80 @@ TEST_F(TransF, c3dprototype_make_tileset_json) {
 
         CONSOLE_EVAL(compute_aabb(actual));
         CONSOLE_EVAL(compute_aabb_with_transform(actual));
+    }
+    {
+        double b[] = {496840.7947318554,
+                        4420745.123109758,
+                        1628.3355102539062,
+                        1.4763270616531372,
+                        0,
+                        0,
+                        0,
+                        1.3503844738006592,
+                        0,
+                        0,
+                        0,
+                        1.38446044921875};
+
+        double t[] = {0.9657585935309204,
+                      -0.2594423616551052,
+                      0,
+                      0,
+                      0.16654706558975313,
+                      0.6199614388126924,
+                      0.7667528215329492,
+                      0,
+                      -0.1989281628242237,
+                      -0.7404981265095258,
+                      0.6419424512144849,
+                      0,
+                      -1270544.8042035468,
+                      -4729526.648222642,
+                      4072608.8590562753,
+                      1};
+        aiVector3t<double> center {t[0], t[1], t[2]};
+        aiMatrix4x4t<double> transform{
+            t[0], t[4], t[8], t[12],
+            t[1], t[5], t[9], t[13],
+            t[2], t[6], t[10], t[14],
+            t[3], t[7], t[11], t[15]
+        };
+        
+        auto center_transformed = transform * center;
+        CONSOLE_EVAL(center_transformed);
+
+        struct Geodetic {
+            double lon_deg, lat_deg, height;
+        };
+
+        auto ecef_to_geodetic = [](double x, double y, double z) -> Geodetic {
+            // WGS84 constants
+            constexpr double a = 6378137.0;           // semi-major axis
+            constexpr double f = 1.0 / 298.257223563; // flattening
+            constexpr double b = a * (1 - f);         // semi-minor axis
+            constexpr double e2 = 1 - (b * b) / (a * a);
+            constexpr double ep2 = (a * a - b * b) / (b * b);
+
+            double p = sqrt(x * x + y * y);
+            double theta = atan2(z * a, p * b);
+            double lon = atan2(y, x);
+            double lat = atan2(z + ep2 * b * pow(sin(theta), 3),
+                               p - e2 * a * pow(cos(theta), 3));
+            double N = a / sqrt(1 - e2 * sin(lat) * sin(lat));
+            double height = p / cos(lat) - N;
+
+            Geodetic geo;
+            geo.lon_deg = lon * 180.0 / M_PI;
+            geo.lat_deg = lat * 180.0 / M_PI;
+            geo.height = height;
+            return geo;
+        };
+
+        // original: -105.03697644 39.93681616 0.00000000
+        // Geodetic: lon=-105.036965 lat=39.9368138 height=7.72997737e-08
+
+        auto geo = ecef_to_geodetic(center_transformed.x, center_transformed.y, center_transformed.z);
+        CONSOLE("Geodetic: lon=" << geo.lon_deg << " lat=" << geo.lat_deg << " height=" << geo.height);
     }
 }
 

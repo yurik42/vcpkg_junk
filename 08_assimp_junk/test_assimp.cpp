@@ -162,6 +162,45 @@ protected:
         return "";
     }
 
+    /// @brief Compute the bounding volume of a scene with respect to node
+    /// transforms
+    /// @param scene
+    /// @return aiAABB (axis-aligned bounding box in world space)
+    aiAABB compute_aabb_with_transform(const aiScene *scene) {
+        aiVector3D sceneMin(std::numeric_limits<float>::max(),
+                            std::numeric_limits<float>::max(),
+                            std::numeric_limits<float>::max());
+        aiVector3D sceneMax(std::numeric_limits<float>::lowest(),
+                            std::numeric_limits<float>::lowest(),
+                            std::numeric_limits<float>::lowest());
+
+        std::function<void(const aiNode *, const aiMatrix4x4 &)> traverse;
+        traverse = [&](const aiNode *node, const aiMatrix4x4 &parentTransform) {
+            aiMatrix4x4 transform = parentTransform * node->mTransformation;
+            for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
+                const aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+                for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
+                    aiVector3D vertex = mesh->mVertices[v];
+                    vertex *= transform;
+                    sceneMin.x = std::min(sceneMin.x, vertex.x);
+                    sceneMin.y = std::min(sceneMin.y, vertex.y);
+                    sceneMin.z = std::min(sceneMin.z, vertex.z);
+                    sceneMax.x = std::max(sceneMax.x, vertex.x);
+                    sceneMax.y = std::max(sceneMax.y, vertex.y);
+                    sceneMax.z = std::max(sceneMax.z, vertex.z);
+                }
+            }
+            for (unsigned int i = 0; i < node->mNumChildren; ++i) {
+                traverse(node->mChildren[i], transform);
+            }
+        };
+
+        if (scene && scene->mRootNode) {
+            traverse(scene->mRootNode, aiMatrix4x4());
+        }
+        return aiAABB{sceneMin, sceneMax};
+    }
+
     /// @brief Compute the bounding volume of a scene w/o respect to transforms
     /// @param actual
     /// @return
@@ -1501,3 +1540,49 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
         }
     }
 }
+
+/*
+    echo "EASTING NORTHING" | cs2cs +proj=utm +zone=13 +ellps=WGS84 +to +proj=latlong +datum=WGS84
+
+    in decimal format
+
+    echo "EASTING NORTHING" | cs2cs +proj=utm +zone=13 +ellps=WGS84 +to +proj=latlong +ellps=WGS84 -f "%.8f"
+
+    To produce a tileset json
+
+    npx 3d-tiles-tools createTilesetJson -f -i cropped/model.glb -o cropped/model.json --cartographicPositionDegrees -105.03697644 39.93681616 0.00000000
+*/
+
+
+/// @brief Load a GLB file and generate tileset.json
+/// @param --gtest_filter=TransF.c3dprototype_make_tileset_json
+/// @param  
+TEST_F(TransF, c3dprototype_make_tileset_json) {
+    auto ws = create_ws();
+    {
+        // Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE, aiDefaultLogStream_STDOUT);
+        auto model_glb =
+            test_data("CesiumTilesF/GM20993_export_cropped_as_cesium3d_tile/model.glb").string();
+        ASSERT_TRUE(fs::is_regular_file(model_glb));
+
+        Assimp::Importer importer;
+        // clang-format off
+        unsigned int postprocess_flags = 0 
+            //| aiProcess_GenBoundingBoxes
+            //| aiProcess_ValidateDataStructure
+            //| aiProcess_CalcTangentSpace
+            //| aiProcess_Triangulate
+            //| aiProcess_GenNormals
+            //| aiProcess_JoinIdenticalVertices
+            ;
+        // clang-format on
+
+        // The original coordinates are in UTM 13N
+        auto actual = importer.ReadFile(model_glb, postprocess_flags);
+        ASSERT_TRUE(actual) << importer.GetErrorString();
+
+        CONSOLE_EVAL(compute_aabb(actual));
+        CONSOLE_EVAL(compute_aabb_with_transform(actual));
+    }
+}
+

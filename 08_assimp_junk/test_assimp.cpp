@@ -1162,6 +1162,33 @@ public:
         // clang-format on
         return t;
     }
+
+    struct Geodetic {
+        double lon_deg, lat_deg, height;
+    };
+
+    auto ecef_to_geodetic (double x, double y, double z) {
+        // WGS84 constants
+        constexpr double a = 6378137.0;           // semi-major axis
+        constexpr double f = 1.0 / 298.257223563; // flattening
+        constexpr double b = a * (1 - f);         // semi-minor axis
+        constexpr double e2 = 1 - (b * b) / (a * a);
+        constexpr double ep2 = (a * a - b * b) / (b * b);
+
+        double p = sqrt(x * x + y * y);
+        double theta = atan2(z * a, p * b);
+        double lon = atan2(y, x);
+        double lat = atan2(z + ep2 * b * pow(sin(theta), 3),
+                           p - e2 * a * pow(cos(theta), 3));
+        double N = a / sqrt(1 - e2 * sin(lat) * sin(lat));
+        double height = p / cos(lat) - N;
+
+        Geodetic geo;
+        geo.lon_deg = lon * 180.0 / M_PI;
+        geo.lat_deg = lat * 180.0 / M_PI;
+        geo.height = height;
+        return geo;
+    };
 };
 
 /// @brief test the matrix transforms
@@ -1673,33 +1700,6 @@ TEST_F(TransF, c3dprototype_make_tileset_json) {
         auto center_transformed = transform * center;
         CONSOLE_EVAL(center_transformed);
 
-        struct Geodetic {
-            double lon_deg, lat_deg, height;
-        };
-
-        auto ecef_to_geodetic = [](double x, double y, double z) -> Geodetic {
-            // WGS84 constants
-            constexpr double a = 6378137.0;           // semi-major axis
-            constexpr double f = 1.0 / 298.257223563; // flattening
-            constexpr double b = a * (1 - f);         // semi-minor axis
-            constexpr double e2 = 1 - (b * b) / (a * a);
-            constexpr double ep2 = (a * a - b * b) / (b * b);
-
-            double p = sqrt(x * x + y * y);
-            double theta = atan2(z * a, p * b);
-            double lon = atan2(y, x);
-            double lat = atan2(z + ep2 * b * pow(sin(theta), 3),
-                               p - e2 * a * pow(cos(theta), 3));
-            double N = a / sqrt(1 - e2 * sin(lat) * sin(lat));
-            double height = p / cos(lat) - N;
-
-            Geodetic geo;
-            geo.lon_deg = lon * 180.0 / M_PI;
-            geo.lat_deg = lat * 180.0 / M_PI;
-            geo.height = height;
-            return geo;
-        };
-
         // original: -105.03697644 39.93681616 0.00000000
         // Geodetic: lon=-105.036965 lat=39.9368138 height=7.72997737e-08
 
@@ -1713,7 +1713,7 @@ TEST_F(TransF, c3dprototype_make_tileset_json) {
 /// @param
 TEST_F(TransF, c3dprototype_box_utm_13N_coordinates) {
 
-    aiVector3d p0{496840, 4420750, 0};
+    aiVector3d p0{496840, 0, -4420750}; // Y-UP coordinates
 
     {
 
@@ -1748,5 +1748,42 @@ TEST_F(TransF, c3dprototype_box_utm_13N_coordinates) {
             auto err = exp.Export(model.get(), "assxml", filename_glb, flags);
             EXPECT_EQ(AI_SUCCESS, err) << "Failed export to " << filename_glb;
         }
+    }
+    {
+        double t[] = {
+            0.965758551283516,
+            -0.259442518918477,
+            0,
+            0,
+            0.16654731910137624,
+            0.6199619795783732,
+            0.7667523292285515,
+            0,
+            -0.19892815568166483,
+            -0.7404976186690275,
+            0.641943039235251,
+            0,
+            -1270544.7618038643,
+            -4729523.416653709,
+            4072612.5998952053,
+            1
+        };
+
+        static_assert(sizeof(t) / sizeof(*t) == 16);
+
+        aiMatrix4x4t<double> transform{
+            t[0], t[4], t[8], t[12],
+            t[1], t[5], t[9], t[13],
+            t[2], t[6], t[10], t[14],
+            t[3], t[7], t[11], t[15]
+        };
+
+        aiVector3d p0_zup{496840, 4420750, 0}; // Y-UP coordinates
+        
+        auto p0_transformed = transform * p0_zup;
+        CONSOLE_EVAL(p0_transformed);
+
+        auto geo = ecef_to_geodetic(p0_transformed.x, p0_transformed.y, p0_transformed.z);
+        CONSOLE("Geodetic: lon=" << geo.lon_deg << " lat=" << geo.lat_deg << " height=" << geo.height);
     }
 }

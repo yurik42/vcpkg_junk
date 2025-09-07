@@ -1708,3 +1708,45 @@ TEST_F(TransF, c3dprototype_make_tileset_json) {
     }
 }
 
+/// @brief
+/// @param --gtest_filter=TransF.c3dprototype_box_utm_13N_coordinates
+/// @param
+TEST_F(TransF, c3dprototype_box_utm_13N_coordinates) {
+
+    aiVector3d p0{496840, 4420750, 0};
+
+    {
+
+        auto ws = create_ws();
+
+        meshtoolbox::Toolbox tb;
+
+        meshtoolbox::box_t b0{p0, {10, 20, 30}};
+
+        std::vector<meshtoolbox::box_t> boxes{b0};
+
+        auto model = std::unique_ptr<aiScene>(tb.make_boxes(boxes));
+
+        ASSERT_TRUE(model);
+        EXPECT_EQ(1, model->mNumMeshes);
+
+        Assimp::Exporter exp;
+        auto flags =
+            /*aiProcess_GenNormals | */ aiProcess_ValidateDataStructure | 0;
+        {
+            std::string filename_glb = (ws / "model.glft").string();
+            auto err = exp.Export(model.get(), "gltf", filename_glb, flags);
+            EXPECT_EQ(AI_SUCCESS, err) << "Failed export to " << filename_glb;
+        }
+        {
+            std::string filename_glb = (ws / "model.glb").string();
+            auto err = exp.Export(model.get(), "glb2", filename_glb, flags);
+            EXPECT_EQ(AI_SUCCESS, err) << "Failed export to " << filename_glb;
+        }
+        {
+            std::string filename_glb = (ws / "model.xml").string();
+            auto err = exp.Export(model.get(), "assxml", filename_glb, flags);
+            EXPECT_EQ(AI_SUCCESS, err) << "Failed export to " << filename_glb;
+        }
+    }
+}

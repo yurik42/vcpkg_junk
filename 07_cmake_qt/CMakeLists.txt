@@ -13,6 +13,8 @@ qt_standard_project_setup()
 
 qt_add_executable(07_helloworld
     main.cpp
+	CMakeLists.txt
 )
 
 target_link_libraries(07_helloworld PRIVATE Qt6::Core Qt6::Widgets Qt6::Gui)
+set_target_properties(07_helloworld PROPERTIES FOLDER "Apps")

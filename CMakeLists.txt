@@ -63,6 +63,11 @@ if(BUILD_10)
   list(APPEND VCPKG_MANIFEST_FEATURES "10-proj")
 endif()
 
+option(BUILD_11 "Build 11_vs" ON)
+if(BUILD_10)
+  list(APPEND VCPKG_MANIFEST_FEATURES "11-vs")
+endif()
+
 project (vcpkg_junk)
 
 if(BUILD_TESTING)
@@ -103,6 +108,10 @@ endif()
 if(BUILD_10)
 	message("Include 10_proj...")
 	add_subdirectory(10_proj)
+endif()
+if(BUILD_11)
+	message("Include 11_vs...")
+	add_subdirectory(11_vs)
 endif()
 
 # end of file

@@ -64,7 +64,7 @@ if(BUILD_10)
 endif()
 
 option(BUILD_11 "Build 11_vs" ON)
-if(BUILD_10)
+if(BUILD_11)
   list(APPEND VCPKG_MANIFEST_FEATURES "11-vs")
 endif()
 

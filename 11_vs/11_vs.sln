@@ -29,6 +29,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_boost_rtree_view_exampl
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_cesium_3d_tiles_pointcloud", "cmd_cesium_3d_tiles_pointcloud\cmd_cesium_3d_tiles_pointcloud.vcxproj", "{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_sombrero_elevation_generator", "cmd_sombrero_elevation_generator\cmd_sombrero_elevation_generator.vcxproj", "{479BCDCF-E66D-4708-9BC3-19E62AB4D694}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -75,6 +77,10 @@ Global
 		{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}.Debug|x64.Build.0 = Debug|x64
 		{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}.Release|x64.ActiveCfg = Release|x64
 		{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}.Release|x64.Build.0 = Release|x64
+		{479BCDCF-E66D-4708-9BC3-19E62AB4D694}.Debug|x64.ActiveCfg = Debug|x64
+		{479BCDCF-E66D-4708-9BC3-19E62AB4D694}.Debug|x64.Build.0 = Debug|x64
+		{479BCDCF-E66D-4708-9BC3-19E62AB4D694}.Release|x64.ActiveCfg = Release|x64
+		{479BCDCF-E66D-4708-9BC3-19E62AB4D694}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

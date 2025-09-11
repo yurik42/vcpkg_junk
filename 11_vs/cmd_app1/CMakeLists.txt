@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add your source files here
-add_executable(cmd_app1
+add_executable(cmd_fmt_example
     main.cpp)
 
 #The package fmt provides CMake targets:

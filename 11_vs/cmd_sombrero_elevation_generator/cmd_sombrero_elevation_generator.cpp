@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <fstream>
+#include <iomanip>
 
 class SombreroElevationGrid {
 private:
@@ -99,7 +101,7 @@ public:
     }
 
     // Save as color-mapped PNG (using a color scheme for elevation)
-    bool saveAsColorPNG(const std::string &filename) {
+    bool saveAsColorPNG(std::string const &filename) {
         std::vector<unsigned char> imageData(width * height * 3); // RGB
 
         // Find min and max elevations for normalization
@@ -144,7 +146,7 @@ public:
     }
 
     // Save as heightmap PNG (16-bit grayscale for higher precision)
-    bool saveAsHeightmapPNG(const std::string &filename) {
+    bool saveAsHeightmapPNG(std::string const &filename) {
         std::vector<unsigned short> imageData(width * height);
 
         // Find min and max elevations
@@ -189,6 +191,51 @@ public:
         return result != 0;
     }
 
+    /// @brief Exports elevation data in standard CSV format with X,Y,Elevation columns
+    /// @param filename 
+    /// @return true if success
+    bool saveAsCSV(std::string const &filename) {
+        std::ofstream csvFile(filename);
+
+        if (!csvFile.is_open()) {
+            std::cout << "✗ Failed to open CSV file: " << filename << std::endl;
+            return false;
+        }
+
+        std::cout << "Saving CSV file: " << filename << "..." << std::endl;
+
+        // Write header with coordinate information as comments
+        csvFile << "# Sombrero Elevation Grid CSV Export\n";
+        csvFile << "# Grid size: " << width << "x" << height << "\n";
+        csvFile << "# Domain: x ∈ [" << xMin << ", " << xMax << "], y ∈ ["
+                << yMin << ", " << yMax << "]\n";
+        csvFile << "# Format: X,Y,Elevation\n";
+
+        // Write data points
+        for (int row = 0; row < height; ++row) {
+            for (int col = 0; col < width; ++col) {
+                // Convert pixel coordinates to world coordinates
+                double x = xMin + (xMax - xMin) * col / (width - 1);
+                double y = yMin + (yMax - yMin) * row / (height - 1);
+                double elevation = elevationData[row][col];
+
+                csvFile << std::fixed << std::setprecision(6) << x << "," << y
+                        << "," << elevation << "\n";
+            }
+        }
+
+        csvFile.close();
+
+        if (csvFile.good()) {
+            std::cout << "✓ CSV saved: " << filename << std::endl;
+            return true;
+        } else {
+            std::cout << "✗ Error occurred while writing CSV: " << filename
+                      << std::endl;
+            return false;
+        }
+    }
+
 private:
     // Convert elevation value (0.0 to 1.0) to RGB color
     void elevationToColor(double value, unsigned char &r, unsigned char &g,
@@ -222,6 +269,7 @@ private:
             b = 0;
         }
     }
+
 
 public:
     // Print some statistics about the elevation data
@@ -299,6 +347,7 @@ int main() {
         grid.saveAsGrayscalePNG("out/" + baseName + "_grayscale.png");
         grid.saveAsColorPNG("out/" + baseName + "_color.png");
         grid.saveAsHeightmapPNG("out/" + baseName + "_heightmap.png");
+        grid.saveAsCSV("out/" + baseName + "_elevation.csv");
     }
 
     std::cout << "\n=== Generation Complete ===" << std::endl;
@@ -307,6 +356,8 @@ int main() {
     std::cout << "  - Color PNGs: elevation as color (blue=low, red=high)"
               << std::endl;
     std::cout << "  - Heightmap PNGs: high-precision elevation data"
+              << std::endl;
+    std::cout << "  - CSV files: elevation data with X,Y,Z coordinates"
               << std::endl;
 
     return 0;

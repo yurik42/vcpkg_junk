@@ -255,8 +255,11 @@ private:
     }
 };
 
+
+#include <gtest/gtest.h>
+
 // Example usage and test
-int main() {
+TEST(main, t0) {
     std::cout
         << "=== Building Tree from Objects using is_inside Predicate ===\n\n";
 
@@ -321,6 +324,10 @@ int main() {
             std::cout << depth << ")\n";
         }
     }
-
-    return 0;
 }
+
+int main(int argc, char **argv) {
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+

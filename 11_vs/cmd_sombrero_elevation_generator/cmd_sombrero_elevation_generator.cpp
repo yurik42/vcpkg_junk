@@ -350,15 +350,5 @@ int main() {
         grid.saveAsCSV("out/" + baseName + "_elevation.csv");
     }
 
-    std::cout << "\n=== Generation Complete ===" << std::endl;
-    std::cout << "Generated files:" << std::endl;
-    std::cout << "  - Grayscale PNGs: elevation as brightness" << std::endl;
-    std::cout << "  - Color PNGs: elevation as color (blue=low, red=high)"
-              << std::endl;
-    std::cout << "  - Heightmap PNGs: high-precision elevation data"
-              << std::endl;
-    std::cout << "  - CSV files: elevation data with X,Y,Z coordinates"
-              << std::endl;
-
     return 0;
 }

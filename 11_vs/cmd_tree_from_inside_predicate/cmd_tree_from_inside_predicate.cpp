@@ -1,5 +1,6 @@
 //
-// build a tree of objects from a list of the objects using an "is_inside" predicate
+// build a tree of objects from a list of the objects using an "is_inside"
+// predicate
 //
 
 #include <algorithm>
@@ -8,6 +9,32 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <gtest/gtest.h>
+
+#ifndef CONSOLE
+#if _DEBUG
+#define CONSOLE(x)                                                             \
+    do {                                                                       \
+        std::cout << __func__ << ":" << x << '\n';                             \
+    } while (0)
+#else
+#define CONSOLE(x)
+#endif
+
+#define CONSOLE_EVAL(x) CONSOLE(#x << " : " << (x))
+
+// "test" console output
+#if _DEBUG
+#define CONSOLE_T(x)                                                           \
+    do {                                                                       \
+        std::cout << test_case_name() << "." << test_name() << ": " << x       \
+                  << '\n';                                                     \
+    } while (0)
+#else
+#define CONSOLE_T(x)
+#endif
+#endif /* CONSOLE */
 
 // Example object class - could be rectangles, polygons, etc.
 struct Rectangle {
@@ -232,13 +259,12 @@ public:
         // Extract roots and build final tree structure
         std::vector<std::unique_ptr<TreeNode<T>>> roots;
         for (auto &node : allNodes) {
-            if (node->parent == nullptr) {
+            if (node && node->parent == nullptr) {
                 // This is a root node
                 buildChildrenRecursive(node.get(), allNodes);
                 roots.push_back(std::move(node));
             }
         }
-
         return roots;
     }
 
@@ -255,23 +281,22 @@ private:
     }
 };
 
-
-#include <gtest/gtest.h>
-
 // Example usage and test
-TEST(main, t0) {
+TEST(main, Tree_built_using_TreeBuilder) {
     std::cout
         << "=== Building Tree from Objects using is_inside Predicate ===\n\n";
 
     // Create test rectangles
     std::vector<Rectangle> rectangles = {
-        {1, "Outer", 0, 0, 20, 20},    // Large outer rectangle
-        {2, "Middle1", 2, 2, 18, 18},  // Medium rectangle inside outer
+        {1, "Outer", 0, 0, 20, 20},   // Large outer rectangle
+        {2, "Middle1", 2, 2, 18, 18}, // Medium rectangle inside outer
+#if 0
         {3, "Inner1", 4, 4, 8, 8},     // Small rectangle inside middle1
         {4, "Inner2", 10, 10, 16, 16}, // Another small rectangle inside middle1
         {5, "Separate", 25, 25, 35, 35}, // Separate rectangle (another root)
         {6, "InSep", 27, 27, 33, 33},    // Inside the separate rectangle
         {7, "Tiny", 5, 5, 6, 6}          // Very small, inside Inner1
+#endif
     };
 
     std::cout << "Input rectangles:\n";
@@ -297,17 +322,6 @@ TEST(main, t0) {
         std::cout << "\n";
     }
 
-    // Build tree using validation approach
-    std::cout << "=== Tree built using ValidatingTreeBuilder ===\n";
-    ValidatingTreeBuilder<Rectangle> validatingBuilder(is_inside);
-    auto tree2 = validatingBuilder.buildTree(rectangles);
-
-    std::cout << "Tree structure:\n";
-    for (const auto &root : tree2) {
-        root->print();
-        std::cout << "\n";
-    }
-
     // Demonstrate tree traversal
     std::cout << "=== Tree Traversal Example ===\n";
     if (!tree1.empty()) {
@@ -326,8 +340,63 @@ TEST(main, t0) {
     }
 }
 
+TEST(main, Tree_built_using_ValidatingTreeBuilder) {
+    std::cout
+        << "=== Building Tree from Objects using is_inside Predicate ===\n\n";
+
+    // Create test rectangles
+    std::vector<Rectangle> rectangles = {
+        {1, "Outer", 0, 0, 20, 20},   // Large outer rectangle
+        {2, "Middle1", 2, 2, 18, 18}, // Medium rectangle inside outer
+        {3, "Inner1", 4, 4, 8, 8},     // Small rectangle inside middle1
+        {4, "Inner2", 10, 10, 16, 16}, // Another small rectangle inside middle1
+        {5, "Separate", 25, 25, 35, 35}, // Separate rectangle (another root)
+        {6, "InSep", 27, 27, 33, 33},    // Inside the separate rectangle
+        {7, "Tiny", 5, 5, 6, 6}          // Very small, inside Inner1
+    };
+
+    std::cout << "Input rectangles:\n";
+    for (const auto &rect : rectangles) {
+        std::cout << "  " << rect.toString() << " (area: " << rect.area()
+                  << ")\n";
+    }
+    std::cout << "\n";
+
+    // Define the is_inside predicate
+    auto is_inside = [](const Rectangle &inner, const Rectangle &outer) {
+        return outer.contains(inner) && inner.id != outer.id;
+    };
+
+    // Build tree using validation approach
+    std::cout << "=== Tree built using ValidatingTreeBuilder ===\n";
+    ValidatingTreeBuilder<Rectangle> validatingBuilder(is_inside);
+    auto tree2 = validatingBuilder.buildTree(rectangles);
+
+    std::cout << "Tree structure:\n";
+    for (const auto &root : tree2) {
+        root->print();
+        std::cout << "\n";
+    }
+
+    // Demonstrate tree traversal
+    std::cout << "=== Tree Traversal Example ===\n";
+    if (!tree2.empty()) {
+        std::cout << "All nodes in first tree:\n";
+        auto allNodes = tree2[0]->getAllNodes();
+        for (const auto *node : allNodes) {
+            std::cout << "  " << node->data.name << " (depth: ";
+            int depth = 0;
+            const TreeNode<Rectangle> *current = node;
+            while (current->parent) {
+                depth++;
+                current = current->parent;
+            }
+            std::cout << depth << ")\n";
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-

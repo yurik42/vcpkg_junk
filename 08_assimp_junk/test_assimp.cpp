@@ -1722,13 +1722,14 @@ TEST_F(TransF, c3dprototype_box_utm_13N_coordinates) {
         meshtoolbox::Toolbox tb;
 
         meshtoolbox::box_t b0{p0, {10, 20, 30}};
-
-        std::vector<meshtoolbox::box_t> boxes{b0};
+        meshtoolbox::box_t b1{p0 + aiVector3d{150, 0, 300}, {10, 40, 10}};
+        
+        std::vector<meshtoolbox::box_t> boxes{b0, b1};
 
         auto model = std::unique_ptr<aiScene>(tb.make_boxes(boxes));
 
         ASSERT_TRUE(model);
-        EXPECT_EQ(1, model->mNumMeshes);
+        EXPECT_EQ(2, model->mNumMeshes);
 
         Assimp::Exporter exp;
         auto flags =
@@ -1778,9 +1779,7 @@ TEST_F(TransF, c3dprototype_box_utm_13N_coordinates) {
             t[3], t[7], t[11], t[15]
         };
 
-        aiVector3d p0_zup{496840, 4420750, 0}; // Y-UP coordinates
-        
-        auto p0_transformed = transform * p0_zup;
+        auto p0_transformed = transform * p0;
         CONSOLE_EVAL(p0_transformed);
 
         auto geo = ecef_to_geodetic(p0_transformed.x, p0_transformed.y, p0_transformed.z);

@@ -28,16 +28,26 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-add_executable (
-    cmd_cgal_example1
-    cmd_cgal_example1.cpp 
-)
 
-target_link_libraries(
-    cmd_cgal_example1
-    PRIVATE
-    CGAL::CGAL
-)
+macro (add_cmd_cgal_example _cmd_name)
+    add_executable (
+        ${_cmd_name}
+        ${_cmd_name}.cpp 
+    )
+
+    target_link_libraries(
+        ${_cmd_name}
+        PRIVATE
+        CGAL::CGAL
+    )
+    set_target_properties(${_cmd_name} PROPERTIES FOLDER "Apps")
+endmacro(add_cmd_cgal_example)
+
+add_cmd_cgal_example(cmd_cgal_example1)
+add_cmd_cgal_example(cmd_cgal_2)
+add_cmd_cgal_example(cmd_cgal_3)
+add_cmd_cgal_example(cmd_cgal_4)
+add_cmd_cgal_example(cmd_cgal_5)
 
 if(BUILD_TESTING)
     enable_testing()

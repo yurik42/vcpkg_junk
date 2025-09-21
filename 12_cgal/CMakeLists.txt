@@ -48,6 +48,7 @@ add_cmd_cgal_example(cmd_cgal_2)
 add_cmd_cgal_example(cmd_cgal_3)
 add_cmd_cgal_example(cmd_cgal_4)
 add_cmd_cgal_example(cmd_cgal_5)
+add_cmd_cgal_example(cmd_cgal_6)
 
 if(BUILD_TESTING)
     enable_testing()

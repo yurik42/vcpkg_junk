@@ -6,3 +6,12 @@ Apparently
 	vcpkg integrate install
 
 
+## CHANGELOG
+
+### Branch devel/yurik42/11_vs_unicode_filenames
+
+	Find out how to use UNICODE filepath in non-UNICODE Windows applications
+
+
+
+

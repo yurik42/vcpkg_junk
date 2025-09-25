@@ -79,6 +79,11 @@ target_include_directories(cmd_tinygltf_example_08
     PRIVATE ${TINYGLTF_INCLUDE_DIRS})
 set_target_properties(cmd_tinygltf_example_08 PROPERTIES FOLDER "Apps")
 
+find_package(draco REQUIRED)
+add_executable(cmd_pnts_decoder cmd_pnts_decoder.cpp)
+target_link_libraries(cmd_pnts_decoder PRIVATE draco::draco)
+set_target_properties(cmd_pnts_decoder PROPERTIES FOLDER "Apps")
+
 if(BUILD_TESTING)
     enable_testing()
     

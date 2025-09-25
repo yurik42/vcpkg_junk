@@ -99,6 +99,8 @@ if(BUILD_TESTING)
         meshtoolbox.h
         test_assimp.cpp
         test_boost.cpp
+        test_draco.cpp
+        test_draco.h
 
         .editorconfig
     )
@@ -110,6 +112,7 @@ if(BUILD_TESTING)
         assimp::assimp
         json-c::json-c
         Eigen3::Eigen
+        draco::draco
 
         GTest::gtest
         GTest::gtest_main

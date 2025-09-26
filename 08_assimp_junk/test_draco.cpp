@@ -341,7 +341,7 @@ protected:
 /// @param --gtest_filter=DracoF.t0
 /// @param
 TEST_F(DracoF, t0) {
-    auto zero_pnts = test_data("draco/0.pnts");
+    auto zero_pnts = test_data("cesium/pnts/0-draco.pnts");
     ASSERT_TRUE(fs::is_regular_file(zero_pnts))
         << "File: " << zero_pnts.string();
 }
@@ -352,7 +352,7 @@ TEST_F(DracoF, t0) {
 TEST_F(DracoF, decodePnts) {
     using namespace cesium_pnts;
 
-    auto zero_pnts = test_data("draco/0.pnts");
+    auto zero_pnts = test_data("cesium/pnts/0-draco.pnts");
     ASSERT_TRUE(fs::is_regular_file(zero_pnts))
         << "File: " << zero_pnts.string();
 

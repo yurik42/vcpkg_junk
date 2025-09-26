@@ -30,6 +30,13 @@
       }
     },
     {
+      "name": "windows-quagga",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "c:/qt6/6.8.1/msvc2022_64/"
+      }
+    },
+    {
       "name": "default-root",
       "inherits": "vcpkg",
       "environment": {

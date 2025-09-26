@@ -3,7 +3,7 @@
 # https://learn.microsoft.com/en-us/vcpkg/users/buildsystems/cmake-integration#settings-reference
 #
 
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.22)
 
 if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)

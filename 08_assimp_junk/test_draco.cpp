@@ -51,6 +51,8 @@ struct PointCloudData {
 
 class CesiumPntsDecoder {
 public:
+    PntsHeader header;
+public:
     // Decode a PNTS file from memory buffer
     bool decodePnts(const std::vector<uint8_t> &fileData,
                            PointCloudData &output) {
@@ -59,8 +61,6 @@ public:
             return false;
         }
 
-        // Read header
-        PntsHeader header;
         std::memcpy(&header, fileData.data(), sizeof(PntsHeader));
 
         // Validate magic number
@@ -68,7 +68,7 @@ public:
             std::cerr << "Invalid PNTS magic number\n";
             return false;
         }
-
+#if _DEBUG
         std::cout << "PNTS Header:\n";
         std::cout << "  Version: " << header.version << "\n";
         std::cout << "  Byte Length: " << header.byteLength << "\n";
@@ -76,7 +76,7 @@ public:
                   << header.featureTableJSONByteLength << "\n";
         std::cout << "  Feature Table Binary Length: "
                   << header.featureTableBinaryByteLength << "\n";
-
+#endif
         // Calculate offsets
         size_t offset = sizeof(PntsHeader);
         size_t jsonStart = offset;
@@ -359,4 +359,12 @@ TEST_F(DracoF, decodePnts) {
     CesiumPntsDecoder sot;
     PointCloudData actual;
     ASSERT_TRUE(sot.loadPntsFile(zero_pnts.string(), actual));
+#if _DEBUG
+    sot.printStatistics(actual);
+#endif
+    EXPECT_EQ(50779, actual.pointCount);
+    EXPECT_EQ(0, actual.normals.size());
+    EXPECT_EQ(50779 * 3, actual.colors.size());
+    EXPECT_EQ(50779 * 3, actual.batchIds.size());
+    EXPECT_EQ(50779 * 3, actual.positions.size());
 }

@@ -872,6 +872,7 @@ TEST_F(AssimpF, stb_read_jpg_too) {
     auto data = std::unique_ptr<stbi_uc, decltype(stbi_uc_deleter)>(
         stbi_load(logo_jpg.string().c_str(), &width, &height, &channels, 0),
         stbi_uc_deleter);
+#if _WIN32
     ASSERT_TRUE(data) << "Failed: " << logo_jpg
                       << ", reason:" << stbi_failure_reason();
 
@@ -889,6 +890,13 @@ TEST_F(AssimpF, stb_read_jpg_too) {
         CONSOLE_EVAL(unsigned(g));
         CONSOLE_EVAL(unsigned(b));
     }
+#else
+    // It's is expected that JPEG is not supported in Linux
+    // (because of the assimp limitations)
+    ASSERT_FALSE(data);
+    const char *error = stbi_failure_reason();
+    ASSERT_TRUE(strstr(error, "unknown") != nullptr) << "Error: " << error;
+#endif
 }
 
 /// @brief Create a PNG file

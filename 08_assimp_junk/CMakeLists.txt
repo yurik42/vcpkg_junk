@@ -37,6 +37,11 @@ find_package(Eigen3 CONFIG REQUIRED)
 
 add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 
+# "VCPKG_TARGET_TRIPLET": "x64-linux-dynamic"
+if ("${VCPKG_TARGET_TRIPLET}" STREQUAL "x64-linux-dynamic")
+   add_definitions(-DX64_LINUX_DYNAMIC=1)
+endif()
+
 add_executable(cmd_getargs_08
     cmd_getargs.cpp
     ../.clang-format

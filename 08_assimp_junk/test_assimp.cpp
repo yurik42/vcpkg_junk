@@ -19,6 +19,11 @@ namespace fs = std::filesystem;
 #if _WIN32
 #define STB_IMAGE_IMPLEMENTATION
 #endif
+
+#if X64_LINUX_DYNAMIC
+#define STB_IMAGE_IMPLEMENTATION
+#endif
+
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
@@ -830,7 +835,7 @@ TEST_F(AssimpF, stb_read_jpg) {
     auto data = std::unique_ptr<stbi_uc, decltype(stbi_uc_deleter)>(
         stbi_load(logo_jpg.string().c_str(), &width, &height, &channels, 0),
         stbi_uc_deleter);
-#if _WIN32
+
     ASSERT_TRUE(data) << "Failed: " << logo_jpg
                       << ", reason:" << stbi_failure_reason();
 
@@ -848,13 +853,6 @@ TEST_F(AssimpF, stb_read_jpg) {
         CONSOLE_EVAL(unsigned(g));
         CONSOLE_EVAL(unsigned(b));
     }
-#else
-    // It's is expected that JPEG is not supported in Linux 
-    // (because of the assimp limitations)
-    ASSERT_FALSE(data);
-    const char *error = stbi_failure_reason();
-    ASSERT_TRUE(strstr(error, "unknown") != nullptr) << "Error: " << error;
-#endif
 }
 
 /// @brief Read a small jpg file with stb library
@@ -872,7 +870,7 @@ TEST_F(AssimpF, stb_read_jpg_too) {
     auto data = std::unique_ptr<stbi_uc, decltype(stbi_uc_deleter)>(
         stbi_load(logo_jpg.string().c_str(), &width, &height, &channels, 0),
         stbi_uc_deleter);
-#if _WIN32
+
     ASSERT_TRUE(data) << "Failed: " << logo_jpg
                       << ", reason:" << stbi_failure_reason();
 
@@ -890,13 +888,6 @@ TEST_F(AssimpF, stb_read_jpg_too) {
         CONSOLE_EVAL(unsigned(g));
         CONSOLE_EVAL(unsigned(b));
     }
-#else
-    // It's is expected that JPEG is not supported in Linux
-    // (because of the assimp limitations)
-    ASSERT_FALSE(data);
-    const char *error = stbi_failure_reason();
-    ASSERT_TRUE(strstr(error, "unknown") != nullptr) << "Error: " << error;
-#endif
 }
 
 /// @brief Create a PNG file

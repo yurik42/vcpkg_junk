@@ -1162,6 +1162,55 @@ TEST_F(AssimpF, meshtoolbox_axis) {
     }
 }
 
+
+/// @brief Read a .GLB file (converted from a .pnts) and dump its content
+/// @param --gtest_filter=AssimpF.load_glb_point_cloud
+/// @param  
+TEST_F(AssimpF, load_glb_point_cloud)
+{
+    auto zero_pnts = test_data("cesium/pnts/0-draco.glb");
+
+    ASSERT_TRUE(fs::is_regular_file(zero_pnts));
+
+    Assimp::Importer import;
+    auto model = import.ReadFile(zero_pnts.string(), 0);
+    ASSERT_TRUE(model);
+
+    auto ws = create_ws();
+    Assimp::Exporter exp;
+    auto flags = aiProcess_ValidateDataStructure | 0;
+    {
+        std::string filename = (ws / "model.xml").string();
+        auto err = exp.Export(model, "assxml", filename, flags);
+        EXPECT_EQ(AI_SUCCESS, err) << "Failed export to " << filename;
+        ASSERT_TRUE(fs::is_regular_file(filename)) << filename;
+    }
+}
+
+/// @brief Read a .GLB file (converted from a NO-DRACO .pnts) and dump its content
+/// @param --gtest_filter=AssimpF.load_glb_point_cloud
+/// @param
+TEST_F(AssimpF, load_glb_point_cloud_no_draco) {
+    auto zero_pnts = test_data("cesium/pnts/0.glb");
+
+    ASSERT_TRUE(fs::is_regular_file(zero_pnts));
+
+    Assimp::Importer import;
+    auto model = import.ReadFile(zero_pnts.string(), 0);
+    ASSERT_TRUE(model);
+
+    auto ws = create_ws();
+    Assimp::Exporter exp;
+    auto flags = aiProcess_ValidateDataStructure | 0;
+    {
+        std::string filename = (ws / "model.xml").string();
+        auto err = exp.Export(model, "assxml", filename, flags);
+        EXPECT_EQ(AI_SUCCESS, err) << "Failed export to " << filename;
+        ASSERT_TRUE(fs::is_regular_file(filename)) << filename;
+    }
+}
+
+
 void PrintTo(aiVector3D const &v, std::ostream *os) { *os << v; }
 
 class TransF : public AssimpF {

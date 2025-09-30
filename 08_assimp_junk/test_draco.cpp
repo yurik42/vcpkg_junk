@@ -346,6 +346,15 @@ TEST_F(DracoF, t0) {
         << "File: " << zero_pnts.string();
 }
 
+/// @brief 
+/// @param --gtest_filter=DracoF.t0_no_draco
+/// @param  
+TEST_F(DracoF, t0_no_draco) {
+    auto zero_pnts = test_data("cesium/pnts/0.pnts");
+    ASSERT_TRUE(fs::is_regular_file(zero_pnts))
+        << "File: " << zero_pnts.string();
+}
+
 /// @brief
 /// @param --gtest_filter=DracoF.decodePnts
 /// @param
@@ -362,6 +371,30 @@ TEST_F(DracoF, decodePnts) {
 #if _DEBUG
     sot.printStatistics(actual);
 #endif
+    EXPECT_EQ(50779, actual.pointCount);
+    EXPECT_EQ(0, actual.normals.size());
+    EXPECT_EQ(50779 * 3, actual.colors.size());
+    EXPECT_EQ(50779 * 3, actual.batchIds.size());
+    EXPECT_EQ(50779 * 3, actual.positions.size());
+}
+
+/// @brief
+/// @param --gtest_filter=DracoF.decodePnts_no_draco
+/// @param
+TEST_F(DracoF, decodePnts_no_draco) {
+    using namespace cesium_pnts;
+
+    auto zero_pnts = test_data("cesium/pnts/0.pnts");
+    ASSERT_TRUE(fs::is_regular_file(zero_pnts))
+        << "File: " << zero_pnts.string();
+
+    CesiumPntsDecoder sot;
+    PointCloudData actual;
+    ASSERT_TRUE(sot.loadPntsFile(zero_pnts.string(), actual));
+#if _DEBUG
+    sot.printStatistics(actual);
+#endif
+    /* TODO: fix it */
     EXPECT_EQ(50779, actual.pointCount);
     EXPECT_EQ(0, actual.normals.size());
     EXPECT_EQ(50779 * 3, actual.colors.size());

@@ -1292,7 +1292,7 @@ TEST_F(TransF, c3dprototype_t0) {
         const aiMesh *mesh = actual->mMeshes[i];
 
         CONSOLE("Mesh " << i << " AABB min: " << mesh->mAABB.mMin
-                        << " max: " << mesh->mAABB.mMin);
+                        << " max: " << mesh->mAABB.mMax);
     }
 
     // dump mesh[0]

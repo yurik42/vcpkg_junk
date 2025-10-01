@@ -21,6 +21,9 @@ namespace fs = std::filesystem;
 #include "draco/compression/decode.h"
 #include "draco/point_cloud/point_cloud.h"
 
+#include <json-c/json.h>
+#include <json-c/printbuf.h>
+
 namespace cesium_pnts {
 #if 0
     }
@@ -52,12 +55,14 @@ struct PointCloudData {
 class CesiumPntsDecoder {
 public:
     PntsHeader header;
+    std::string last_error;
+
 public:
     // Decode a PNTS file from memory buffer
     bool decodePnts(const std::vector<uint8_t> &fileData,
                            PointCloudData &output) {
         if (fileData.size() < sizeof(PntsHeader)) {
-            std::cerr << "File too small to contain PNTS header\n";
+            last_error = "File too small to contain PNTS header";
             return false;
         }
 
@@ -65,7 +70,7 @@ public:
 
         // Validate magic number
         if (std::strncmp(header.magic, "pnts", 4) != 0) {
-            std::cerr << "Invalid PNTS magic number\n";
+            last_error = "Invalid PNTS magic number";
             return false;
         }
 #if _DEBUG
@@ -85,8 +90,9 @@ public:
         size_t binaryEnd = binaryStart + header.featureTableBinaryByteLength;
 
         // Extract feature table JSON (optional - parse to get metadata)
+        std::string featureTableJSON;
         if (header.featureTableJSONByteLength > 0) {
-            std::string featureTableJSON(
+            featureTableJSON = std::string(
                 reinterpret_cast<const char *>(fileData.data() + jsonStart),
                 header.featureTableJSONByteLength);
             std::cout << "\nFeature Table JSON:\n"
@@ -96,7 +102,7 @@ public:
         // Check if data is Draco compressed
         // Look for Draco magic bytes in binary section
         if (binaryEnd > fileData.size()) {
-            std::cerr << "Invalid binary data range\n";
+            last_error = "Invalid binary data range";
             return false;
         }
 
@@ -111,11 +117,24 @@ public:
         if (isDraco) {
             std::cout << "Detected Draco compression\n";
             return decodeDracoPointCloud(binaryData, binarySize, output);
-        } else {
-            std::cout
-                << "No Draco compression detected, reading raw binary data\n";
-            return decodeRawPointCloud(binaryData, binarySize, output);
         }
+
+        /* non-draco */
+        {
+            if (!decodeRawPointCloud(featureTableJSON, binaryData, binarySize,
+                                     output))
+                return false;
+            /* parse batch part */
+            if (size_t batchSize = header.batchTableBinaryByteLength)
+            {
+                const uint8_t *batchData =
+                    fileData.data() + binaryStart + binarySize;
+                std::string batchJSON((const char *)batchData,
+                                      header.batchTableJSONByteLength);
+                std::cout << "batchJSON: " << batchJSON << "\n";
+            }
+        }
+        return true;
     }
 
     // Decode Draco compressed point cloud
@@ -226,24 +245,116 @@ public:
         return true;
     }
 
-    // Decode raw (uncompressed) point cloud data
-    bool decodeRawPointCloud(const uint8_t *data, size_t size,
-                                    PointCloudData &output) {
-        // This is a simplified example - actual implementation depends on
-        // the feature table JSON which specifies the data layout
+    bool false_because(std::string s) {
+        last_error = s;
+        return false;
+    }
 
-        // Assuming positions are stored as float32[3] per point
-        if (size % (3 * sizeof(float)) != 0) {
-            std::cerr << "Invalid raw point data size\n";
-            return false;
+    struct feature_table_props_t {
+        std::optional<unsigned> POINTS_LENGTH,
+            POSITION_byteOffset,
+            RGBA_byteOffset, 
+            POSITION_QUANTIZED_byteOffset,
+            RGB_byteOffset;
+        std::vector<float> RTC_CENTER;
+        std::map<std::string, std::string> extensions;
+    } ;
+
+    bool parse_feature_table_json(const char* json_text, feature_table_props_t& props)
+    {
+        auto root = json_tokener_parse(json_text);
+        if (!root)
+            return false_because("Cannot parse featureTableJSON");
+
+        // destroy `root` object on exit of the scope
+        std::unique_ptr<json_object, std::function<void(json_object *)>>
+            on_return(root, [](json_object *r) { json_object_put(r); });
+
+        {
+            auto o = json_object_object_get(root, "POINTS_LENGTH");
+            if (!o)
+                return false_because("POINTS_LENGTH is not defined");
+            props.POINTS_LENGTH = json_object_get_int(o);
         }
 
-        output.pointCount = size / (3 * sizeof(float));
-        output.positions.resize(size / sizeof(float));
+        if (auto eo = json_object_object_get(root, "extensions")) {
+            if (auto e_draco = json_object_object_get(
+                    eo, "3DTILES_draco_point_compression")) {
+                // TODO: parse the draco extensions parameters
+                props.extensions.insert(
+                    {"3DTILES_draco_point_compression", "1"});
+            }
+        }
 
-        std::memcpy(output.positions.data(), data, size);
+        if (auto po = json_object_object_get(root, "POSITION")) {
+            unsigned byteOffset = 0;
+            if (auto bo = json_object_object_get(root, "byteOffset"))
+                byteOffset = json_object_get_int(bo);
+            props.POSITION_byteOffset = byteOffset;
+        }
+        if (auto o = json_object_object_get(root, "RTC_CENTER")) {
+            if (json_type_array != json_object_get_type(o))
+                return false_because("RTC_CENTER must be array");
+            array_list *arr = json_object_get_array(o);
+            if (arr->length != 3)
+                return false_because("RTC_CENTER must be array of 3");
+            props.RTC_CENTER.resize(3);
+            for (int i = 0; i < arr->length; ++i)
+                props.RTC_CENTER[i] =
+                    static_cast<float>(json_object_get_double(
+                        (json_object *)arr->array[i]));
+        }
+        if (auto po = json_object_object_get(root, "RGB")) {
+            unsigned byteOffset = 0;
+            if (auto bo = json_object_object_get(root, "byteOffset"))
+                byteOffset = json_object_get_int(bo);
+            props.RGB_byteOffset = byteOffset;
+        }
+        if (auto po = json_object_object_get(root, "RGBA")) {
+            unsigned byteOffset = 0;
+            if (auto bo = json_object_object_get(root, "byteOffset"))
+                byteOffset = json_object_get_int(bo);
+            props.RGBA_byteOffset = byteOffset;
+        }
 
-        std::cout << "Decoded " << output.pointCount << " raw points\n";
+        if (!props.POSITION_byteOffset.has_value() &&
+            !props.POSITION_QUANTIZED_byteOffset.has_value())
+            return false_because(
+                "Nether POSITION nor POSITION_QUANTIZED defined");
+
+        return true;
+    }
+
+    // Decode raw (uncompressed) point cloud data
+    bool decodeRawPointCloud(std::string const &featureTableJSON,
+                             const uint8_t *data, size_t size,
+                             PointCloudData &output) {
+
+        feature_table_props_t features;
+
+        if (!parse_feature_table_json(featureTableJSON.c_str(), features))
+            return false;
+
+        output.pointCount = features.POINTS_LENGTH.value();
+        if (features.POSITION_byteOffset.has_value()) {
+            auto pos = reinterpret_cast<float const *>(
+                data + features.POSITION_byteOffset.value());
+            output.positions.assign(pos, pos + 3 * output.pointCount);
+        } else {
+            // TODO: implement POSITION_QUANTIZED support
+            return false_because("only POSITION currently supported");
+        }
+
+        if (features.RGB_byteOffset.has_value()) {
+            auto pos = reinterpret_cast<uint8_t const *>(
+                data + features.RGB_byteOffset.value());
+            output.colors.assign(pos, pos + 3 * output.pointCount);
+        } else if (features.RGBA_byteOffset.has_value()) {
+            auto pos = reinterpret_cast<uint8_t const *>(
+                data + features.RGBA_byteOffset.value());
+            output.colors.assign(pos, pos + 4 * output.pointCount);
+        }
+
         return true;
     }
 
@@ -394,7 +505,13 @@ TEST_F(DracoF, decodePnts_no_draco) {
 #if _DEBUG
     sot.printStatistics(actual);
 #endif
-    /* TODO: fix it */
+
+    EXPECT_EQ(1016024, sot.header.byteLength);
+    EXPECT_EQ(156, sot.header.featureTableJSONByteLength);
+    EXPECT_EQ(761688, sot.header.featureTableBinaryByteLength);
+    EXPECT_EQ(256, sot.header.batchTableJSONByteLength);
+    EXPECT_EQ(253896, sot.header.batchTableBinaryByteLength);
+
     EXPECT_EQ(50779, actual.pointCount);
     EXPECT_EQ(0, actual.normals.size());
     EXPECT_EQ(50779 * 3, actual.colors.size());

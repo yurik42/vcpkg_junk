@@ -56,7 +56,63 @@ struct PointCloudData {
 
 class CesiumPntsDecoder {
 public:
+
+    enum batch_header_type { ARRAY, REFERENCE };
+    struct batch_array_t {
+        std::string attr;
+    };
+    struct batch_reference_t {
+        std::string attr;
+        uint32_t byte_offset;
+        enum : int {
+            UNDEFINED = 0,
+            BYTE,
+            UNSIGNED_BYTE,
+            SHORT,
+            UNSIGNED_SHORT,
+            INT,
+            UNSIGNED_INT,
+            FLOAT,
+            DOUBLE
+        } component_type;         /* BYTE, SHORT, ...*/
+        int number_of_components; /* SCALAR == 1, VEC2 == 2, VEC3 == 3, VEC4 ==
+                                     4 */
+    };
+
+    static decltype(batch_reference_t::BYTE)
+    batch_reference_component_type(const char *ct) {
+#define R(s) if (!strcmp(ct, #s)) return batch_reference_t::s
+        R(BYTE);
+        R(UNSIGNED_BYTE);
+        R(SHORT);
+        R(UNSIGNED_SHORT);
+        R(INT);
+        R(UNSIGNED_INT);
+        R(FLOAT);
+        R(DOUBLE);
+        return batch_reference_t::UNDEFINED;
+#undef R
+    }
+
+    static int batch_reference_number_of_components(const char* t) {
+        if (!strcmp(t, "SCALAR"))
+            return 1;
+        if (!strcmp(t, "VEC2"))
+            return 2;
+        if (!strcmp(t, "VEC3"))
+            return 3;
+        if (!strcmp(t, "VEC4"))
+            return 4;
+        return 0; // invalid!
+    }
+
+    struct batch_header_t {
+        std::vector<batch_array_t> arrays;
+        std::vector<batch_reference_t> references;
+    };
+
     PntsHeader header;
+    batch_header_t batch_header;
     std::string last_error;
 
 public:
@@ -123,7 +179,6 @@ public:
         if (!batchTableJSON.empty()) {
             auto pos =
                 binaryData + binarySize + header.batchTableJSONByteLength;
-            batch_header_t batch_header;
             if (parse_batch_table_json(batchTableJSON.c_str(), batch_header)) {
                 // ...
             }
@@ -237,7 +292,7 @@ public:
                 if (attr->num_components() == 1) {
                     output.batchIds.reserve(output.pointCount);
                     for (uint32_t j = 0; j < output.pointCount; ++j) {
-                        uint32_t batchId;
+                        uint32_t batchId{};
                         attr->GetMappedValue(draco::PointIndex(j), &batchId);
                         output.batchIds.push_back(batchId);
                     }
@@ -262,29 +317,6 @@ public:
         std::vector<float> RTC_CENTER;
         std::map<std::string, std::string> extensions;
     } ;
-
-    enum batch_header_type { ARRAY, REFERENCE };
-    struct batch_array_t {
-        std::string attr;
-    };
-    struct batch_reference_t {
-        std::string attr;
-        enum {
-            BYTE,
-            UNSIGNED_BYTE,
-            SHORT,
-            UNSIGNED_SHORT,
-            INT,
-            UNSIGNED_INT,
-            FLOAT,
-            DOUBLE
-        } component_type;   /* BYTE, SHORT, ...*/
-        int number_of_components; /* SCALAR == 1, VEC2 == 2, VEC3 == 3, VEC4 == 4 */
-    };
-    struct batch_header_t {
-        std::vector<batch_array_t> arrays;
-        std::vector<batch_reference_t> references;
-    };
 
     bool parse_feature_table_json(const char* json_text, feature_table_props_t& props)
     {
@@ -385,7 +417,7 @@ public:
         return true;
     }
 
-    /// @brief 
+    /// @brief
     /// @param batchTableJSON 
     /// @param batch_header 
     /// @return true if success 
@@ -405,8 +437,43 @@ public:
         while (!json_object_iter_equal(&it, &itEnd)) {
             const char *key = json_object_iter_peek_name(&it);
             CONSOLE_EVAL(key);
+            auto val = json_object_iter_peek_value(&it);
+
+            if (!strcmp("extensions", key))
+            {
+                // extensions will be parsed separately
+                CONSOLE("...extensions");
+            } else if (json_object_get_type(val) == json_type_object) {
+                /* we are parsing a reference */
+                /* e.g. {"byteOffset":152337,"componentType":"UNSIGNED_SHORT","type":"SCALAR"} */
+
+                batch_reference_t br{};
+                br.attr = key;
+                if (auto bo = json_object_object_get(val, "byteOffset")) {
+                    br.byte_offset = json_object_get_int(bo);
+                }
+                if (auto ct = json_object_object_get(val, "componentType")) {
+                    br.component_type = batch_reference_component_type(json_object_get_string(ct));
+                }
+                if (auto t = json_object_object_get(val, "type")) {
+                    br.number_of_components = batch_reference_number_of_components(json_object_get_string(t));
+                }
+
+                batch_header.references.push_back(br);
+            } else if (json_object_get_type(val) == json_type_array) {
+                /* we are parsing an array */
+                batch_array_t arr{};
+                arr.attr = key;
+                batch_header.arrays.push_back(arr);
+            } else {
+                CONSOLE("Not expected type: " << json_object_get_type(val));
+            }
+
             json_object_iter_next(&it);
         }
+        if (batch_header.arrays.size() && batch_header.references.size())
+            return false_because("batch json should not mix different types of "
+                                 "attributes (references and arrays)");
         return true;
     }
 
@@ -433,6 +500,15 @@ public:
 
     // Helper function to print point cloud statistics
     void printStatistics(const PointCloudData &data) {
+        if (batch_header.references.size()) {
+            CONSOLE("=== Batch REFERENCE definitions: ===");
+            for (auto &rp : batch_header.references) {
+                CONSOLE(rp.attr << " { off:" << rp.byte_offset
+                                << ", type:" << rp.component_type << ", number_of_components:"
+                                << rp.number_of_components << " }");
+            }
+        }
+
         CONSOLE("=== Point Cloud Statistics ===");
         CONSOLE("Point Count: " << data.pointCount);
         CONSOLE("Has Positions: " << (!data.positions.empty() ? "Yes" : "No"));
@@ -532,7 +608,22 @@ TEST_F(DracoF, decodePnts) {
     EXPECT_EQ(50779, actual.pointCount);
     EXPECT_EQ(0, actual.normals.size());
     EXPECT_EQ(50779 * 3, actual.colors.size());
-    EXPECT_EQ(50779 * 3, actual.batchIds.size());
+    ASSERT_EQ(50779 * 3, actual.batchIds.size()); // that is just a coincidence size() == 50779 * 3
+
+    CONSOLE(std::hex);
+    CONSOLE_EVAL(actual.batchIds[0]);
+    CONSOLE_EVAL(actual.batchIds[1]);
+    CONSOLE_EVAL(actual.batchIds[2]);
+
+    CONSOLE_EVAL(actual.batchIds[50779]);
+    CONSOLE_EVAL(actual.batchIds[50779+1]);
+    CONSOLE_EVAL(actual.batchIds[50779+2]);
+
+    CONSOLE_EVAL(actual.batchIds[50779 + 50779]);
+    CONSOLE_EVAL(actual.batchIds[50779 + 50779 + 1]);
+    CONSOLE_EVAL(actual.batchIds[50779 + 50779 + 2]);
+
+    CONSOLE(std::dec);
     EXPECT_EQ(50779 * 3, actual.positions.size());
 }
 

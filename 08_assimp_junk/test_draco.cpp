@@ -24,6 +24,8 @@ namespace fs = std::filesystem;
 #include <json-c/json.h>
 #include <json-c/printbuf.h>
 
+#include "../common/CONSOLE.h"
+
 namespace cesium_pnts {
 #if 0
     }
@@ -60,7 +62,7 @@ public:
 public:
     // Decode a PNTS file from memory buffer
     bool decodePnts(const std::vector<uint8_t> &fileData,
-                           PointCloudData &output) {
+                    PointCloudData &output) {
         if (fileData.size() < sizeof(PntsHeader)) {
             last_error = "File too small to contain PNTS header";
             return false;
@@ -73,15 +75,15 @@ public:
             last_error = "Invalid PNTS magic number";
             return false;
         }
-#if _DEBUG
-        std::cout << "PNTS Header:\n";
-        std::cout << "  Version: " << header.version << "\n";
-        std::cout << "  Byte Length: " << header.byteLength << "\n";
-        std::cout << "  Feature Table JSON Length: "
-                  << header.featureTableJSONByteLength << "\n";
-        std::cout << "  Feature Table Binary Length: "
-                  << header.featureTableBinaryByteLength << "\n";
-#endif
+
+        CONSOLE("PNTS Header:");
+        CONSOLE_EVAL(header.version);
+        CONSOLE_EVAL(header.byteLength);
+        CONSOLE_EVAL(header.featureTableJSONByteLength);
+        CONSOLE_EVAL(header.featureTableBinaryByteLength);
+        CONSOLE_EVAL(header.batchTableJSONByteLength);
+        CONSOLE_EVAL(header.batchTableBinaryByteLength);
+
         // Calculate offsets
         size_t offset = sizeof(PntsHeader);
         size_t jsonStart = offset;
@@ -95,8 +97,7 @@ public:
             featureTableJSON = std::string(
                 reinterpret_cast<const char *>(fileData.data() + jsonStart),
                 header.featureTableJSONByteLength);
-            std::cout << "\nFeature Table JSON:\n"
-                      << featureTableJSON << "\n\n";
+            CONSOLE_EVAL(featureTableJSON);
         }
 
         // Check if data is Draco compressed
@@ -109,32 +110,35 @@ public:
         const uint8_t *binaryData = fileData.data() + binaryStart;
         size_t binarySize = header.featureTableBinaryByteLength;
 
+        /* parse batch part */
+        std::string batchTableJSON;
+        if (header.batchTableJSONByteLength) {
+            const uint8_t *batchData =
+                fileData.data() + binaryStart + binarySize;
+            batchTableJSON.assign((const char *)batchData,
+                                  header.batchTableJSONByteLength);
+            CONSOLE_EVAL(batchTableJSON);
+        }
+
+        if (!batchTableJSON.empty()) {
+            auto pos =
+                binaryData + binarySize + header.batchTableJSONByteLength;
+            batch_header_t batch_header;
+            if (parse_batch_table_json(batchTableJSON.c_str(), batch_header)) {
+                // ...
+            }
+        }
+
         // Check for Draco magic number "DRACO" at the start of binary data
         bool isDraco = (binarySize > 5 && binaryData[0] == 'D' &&
                         binaryData[1] == 'R' && binaryData[2] == 'A' &&
                         binaryData[3] == 'C' && binaryData[4] == 'O');
 
-        if (isDraco) {
-            std::cout << "Detected Draco compression\n";
+        if (isDraco)
             return decodeDracoPointCloud(binaryData, binarySize, output);
-        }
-
         /* non-draco */
-        {
-            if (!decodeRawPointCloud(featureTableJSON, binaryData, binarySize,
-                                     output))
-                return false;
-            /* parse batch part */
-            if (size_t batchSize = header.batchTableBinaryByteLength)
-            {
-                const uint8_t *batchData =
-                    fileData.data() + binaryStart + binarySize;
-                std::string batchJSON((const char *)batchData,
-                                      header.batchTableJSONByteLength);
-                std::cout << "batchJSON: " << batchJSON << "\n";
-            }
-        }
-        return true;
+        return decodeRawPointCloud(featureTableJSON, batchTableJSON, binaryData,
+                                   binarySize, output);
     }
 
     // Decode Draco compressed point cloud
@@ -158,15 +162,14 @@ public:
             std::move(statusor).value();
         output.pointCount = pointCloud->num_points();
 
-        std::cout << "Successfully decoded " << output.pointCount
-                  << " points\n";
+        CONSOLE("Successfully decoded " << output.pointCount << " points");
 
         // Extract position attribute
         const draco::PointAttribute *posAttr =
             pointCloud->GetNamedAttribute(draco::GeometryAttribute::POSITION);
 
         if (posAttr) {
-            std::cout << "Found POSITION attribute\n";
+            CONSOLE("Found POSITION attribute");
             output.positions.reserve(output.pointCount * 3);
 
             for (uint32_t i = 0; i < output.pointCount; ++i) {
@@ -183,7 +186,7 @@ public:
             pointCloud->GetNamedAttribute(draco::GeometryAttribute::COLOR);
 
         if (colorAttr) {
-            std::cout << "Found COLOR attribute\n";
+            CONSOLE("Found COLOR attribute");
             int numComponents = colorAttr->num_components();
             output.colors.reserve(output.pointCount * numComponents);
 
@@ -210,7 +213,7 @@ public:
             pointCloud->GetNamedAttribute(draco::GeometryAttribute::NORMAL);
 
         if (normalAttr) {
-            std::cout << "Found NORMAL attribute\n";
+            CONSOLE("Found NORMAL attribute");
             output.normals.reserve(output.pointCount * 3);
 
             for (uint32_t i = 0; i < output.pointCount; ++i) {
@@ -228,7 +231,7 @@ public:
 
             // Check for custom attributes by metadata or unique_id
             if (attr->attribute_type() == draco::GeometryAttribute::GENERIC) {
-                std::cout << "Found GENERIC attribute at index " << i << "\n";
+                CONSOLE("Found GENERIC attribute at index " << i);
 
                 // Try to extract as batch IDs (assuming uint32_t)
                 if (attr->num_components() == 1) {
@@ -253,12 +256,35 @@ public:
     struct feature_table_props_t {
         std::optional<unsigned> POINTS_LENGTH,
             POSITION_byteOffset,
-            RGBA_byteOffset, 
+            RGBA_byteOffset,
             POSITION_QUANTIZED_byteOffset,
             RGB_byteOffset;
         std::vector<float> RTC_CENTER;
         std::map<std::string, std::string> extensions;
     } ;
+
+    enum batch_header_type { ARRAY, REFERENCE };
+    struct batch_array_t {
+        std::string attr;
+    };
+    struct batch_reference_t {
+        std::string attr;
+        enum {
+            BYTE,
+            UNSIGNED_BYTE,
+            SHORT,
+            UNSIGNED_SHORT,
+            INT,
+            UNSIGNED_INT,
+            FLOAT,
+            DOUBLE
+        } component_type;   /* BYTE, SHORT, ...*/
+        int number_of_components; /* SCALAR == 1, VEC2 == 2, VEC3 == 3, VEC4 == 4 */
+    };
+    struct batch_header_t {
+        std::vector<batch_array_t> arrays;
+        std::vector<batch_reference_t> references;
+    };
 
     bool parse_feature_table_json(const char* json_text, feature_table_props_t& props)
     {
@@ -327,6 +353,7 @@ public:
 
     // Decode raw (uncompressed) point cloud data
     bool decodeRawPointCloud(std::string const &featureTableJSON,
+                             std::string const &batchTableJSON,
                              const uint8_t *data, size_t size,
                              PointCloudData &output) {
 
@@ -358,6 +385,31 @@ public:
         return true;
     }
 
+    /// @brief 
+    /// @param batchTableJSON 
+    /// @param batch_header 
+    /// @return true if success 
+    bool parse_batch_table_json(const char *batchTableJSON,
+                          batch_header_t &batch_header)
+    {
+        auto root = json_tokener_parse(batchTableJSON);
+        if (!root)
+            return false_because("Cannot parse batchTableJSON");
+
+        // destroy `root` object on exit of the scope
+        std::unique_ptr<json_object, std::function<void(json_object *)>>
+            on_return(root, [](json_object *r) { json_object_put(r); });
+
+        auto it = json_object_iter_begin(root);
+        auto itEnd = json_object_iter_end(root);
+        while (!json_object_iter_equal(&it, &itEnd)) {
+            const char *key = json_object_iter_peek_name(&it);
+            CONSOLE_EVAL(key);
+            json_object_iter_next(&it);
+        }
+        return true;
+    }
+
     // Load PNTS file from disk
     bool loadPntsFile(const std::string &filename,
                              PointCloudData &output) {
@@ -381,28 +433,23 @@ public:
 
     // Helper function to print point cloud statistics
     void printStatistics(const PointCloudData &data) {
-        std::cout << "\n=== Point Cloud Statistics ===\n";
-        std::cout << "Point Count: " << data.pointCount << "\n";
-        std::cout << "Has Positions: "
-                  << (!data.positions.empty() ? "Yes" : "No") << "\n";
-        std::cout << "Has Colors: " << (!data.colors.empty() ? "Yes" : "No")
-                  << "\n";
-        std::cout << "Has Normals: " << (!data.normals.empty() ? "Yes" : "No")
-                  << "\n";
-        std::cout << "Has Batch IDs: "
-                  << (!data.batchIds.empty() ? "Yes" : "No") << "\n";
+        CONSOLE("=== Point Cloud Statistics ===");
+        CONSOLE("Point Count: " << data.pointCount);
+        CONSOLE("Has Positions: " << (!data.positions.empty() ? "Yes" : "No"));
+        CONSOLE("Has Colors: " << (!data.colors.empty() ? "Yes" : "No"));
+        CONSOLE("Has Normals: " << (!data.normals.empty() ? "Yes" : "No"));
+        CONSOLE("Has Batch IDs: " << (!data.batchIds.empty() ? "Yes" : "No"));
 
         // Print sample data
         if (!data.positions.empty() && data.pointCount > 0) {
-            std::cout << "\nFirst point position: (" << data.positions[0]
-                      << ", " << data.positions[1] << ", " << data.positions[2]
-                      << ")\n";
+            CONSOLE("First point position: (" << data.positions[0]
+                      << ", " << data.positions[1] << ", " << data.positions[2] << ")");
         }
 
         if (!data.colors.empty() && data.pointCount > 0) {
-            std::cout << "First point color: (" << (int)data.colors[0] << ", "
+            CONSOLE("First point color: (" << (int)data.colors[0] << ", "
                       << (int)data.colors[1] << ", " << (int)data.colors[2]
-                      << ")\n";
+                      << ")");
         }
     }
 };
@@ -457,9 +504,9 @@ TEST_F(DracoF, t0) {
         << "File: " << zero_pnts.string();
 }
 
-/// @brief 
+/// @brief
 /// @param --gtest_filter=DracoF.t0_no_draco
-/// @param  
+/// @param
 TEST_F(DracoF, t0_no_draco) {
     auto zero_pnts = test_data("cesium/pnts/0.pnts");
     ASSERT_TRUE(fs::is_regular_file(zero_pnts))
@@ -479,9 +526,9 @@ TEST_F(DracoF, decodePnts) {
     CesiumPntsDecoder sot;
     PointCloudData actual;
     ASSERT_TRUE(sot.loadPntsFile(zero_pnts.string(), actual));
-#if _DEBUG
+
     sot.printStatistics(actual);
-#endif
+
     EXPECT_EQ(50779, actual.pointCount);
     EXPECT_EQ(0, actual.normals.size());
     EXPECT_EQ(50779 * 3, actual.colors.size());
@@ -502,9 +549,8 @@ TEST_F(DracoF, decodePnts_no_draco) {
     CesiumPntsDecoder sot;
     PointCloudData actual;
     ASSERT_TRUE(sot.loadPntsFile(zero_pnts.string(), actual));
-#if _DEBUG
+
     sot.printStatistics(actual);
-#endif
 
     EXPECT_EQ(1016024, sot.header.byteLength);
     EXPECT_EQ(156, sot.header.featureTableJSONByteLength);

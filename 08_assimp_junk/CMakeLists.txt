@@ -109,6 +109,13 @@ if(BUILD_TESTING)
 
         .editorconfig
     )
+    if (MSVC)
+        # That MUST be fixed. CMAKE does not add /Zi flag in Debug configuration
+        target_compile_options(test_08 PRIVATE
+            $<$<CONFIG:Debug>:/Zi>
+            $<$<CONFIG:RelWithDebInfo>:/Zi> # Example for RelWithDebInfo as well
+        )
+    endif()
     target_include_directories(test_08 PRIVATE ${Stb_INCLUDE_DIR} ${TINYGLTF_INCLUDE_DIRS})
     target_link_libraries(test_08 PRIVATE
         Boost::program_options

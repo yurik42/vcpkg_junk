@@ -837,7 +837,7 @@ TEST_F(AssimpF, stb_read_jpg) {
         CONSOLE_EVAL(unsigned(b));
     }
 #else
-    // It's is expected that JPEG is not supported in Linux 
+    // It is expected that JPEG is not supported in Linux 
     // (because of the assimp limitations)
     ASSERT_FALSE(data);
     const char *error = stbi_failure_reason();

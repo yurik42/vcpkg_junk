@@ -16,15 +16,14 @@ namespace fs = std::filesystem;
 #include <assimp/Logger.hpp>
 #include <assimp/scene.h>
 
-
 #define STB_IMAGE_IMPLEMENTATION
 
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
-#include "assimp_aux.h"
 #include "../common/CONSOLE.h"
+#include "assimp_aux.h"
 
 class AssimpF : public testing::Test {
 protected:
@@ -55,7 +54,9 @@ protected:
     }
 
     auto test_data(const char *relative_path) {
-      auto test_data_dir = fs::absolute(__FILE__).parent_path().parent_path() / "08_assimp_junk" / "test_data";
+        auto test_data_dir =
+            fs::absolute(__FILE__).parent_path().parent_path() /
+            "08_assimp_junk" / "test_data";
         return test_data_dir / relative_path;
     }
 
@@ -468,7 +469,7 @@ TEST_F(AssimpF, load_textured_cube_variants) {
     auto ws = create_ws();
 
     // clang-format off
-    const char *files [] = { 
+    const char *files [] = {
         "BoxTextured-glTF/BoxTextured.gltf",
         "BoxTextured-glTF-Binary/BoxTextured.glb",
         "BoxTextured-glTF-Embedded/BoxTextured.gltf",
@@ -837,7 +838,7 @@ TEST_F(AssimpF, stb_read_jpg) {
         CONSOLE_EVAL(unsigned(b));
     }
 #else
-    // It is expected that JPEG is not supported in Linux 
+    // It is expected that JPEG is not supported in Linux
     // (because of the assimp limitations)
     ASSERT_FALSE(data);
     const char *error = stbi_failure_reason();
@@ -1278,7 +1279,7 @@ TEST_F(TransF, c3dprototype_t0) {
     auto bounding_boxes_glb = test_data("tileset2/bounding_boxes.glb").string();
     Assimp::Importer importer;
     // clang-format off
-    unsigned int postprocess_flags = 0 
+    unsigned int postprocess_flags = 0
             | aiProcess_GenBoundingBoxes
             ;
     // clang-format on
@@ -1426,7 +1427,7 @@ TEST_F(TransF, c3dprototype_triangulate) {
     auto bounding_boxes_glb = test_data("tileset2/bounding_boxes.glb").string();
     Assimp::Importer importer;
     // clang-format off
-        unsigned int postprocess_flags = 0 
+        unsigned int postprocess_flags = 0
             // | aiProcess_GenBoundingBoxes
             // | aiProcess_ValidateDataStructure
             // | aiProcess_CalcTangentSpace
@@ -1460,7 +1461,7 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
             test_data("tileset2/bounding_boxes.glb").string();
         Assimp::Importer importer;
         // clang-format off
-        unsigned int postprocess_flags = 0 
+        unsigned int postprocess_flags = 0
             //| aiProcess_GenBoundingBoxes
             //| aiProcess_ValidateDataStructure
             //| aiProcess_CalcTangentSpace
@@ -1652,7 +1653,7 @@ TEST_F(TransF, c3dprototype_make_tileset_json) {
 
         Assimp::Importer importer;
         // clang-format off
-        unsigned int postprocess_flags = 0 
+        unsigned int postprocess_flags = 0
             //| aiProcess_GenBoundingBoxes
             //| aiProcess_ValidateDataStructure
             //| aiProcess_CalcTangentSpace

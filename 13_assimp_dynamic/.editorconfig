@@ -3,6 +3,10 @@
 #
 root = false
 
+# Remove trailing whitespace for all files
+[*]
+trim_trailing_whitespace = true
+
 [*.{c++,cc,cpp,cppm,cxx,h,h++,hh,hpp,hxx,inl,ipp,ixx,tlh,tli}]
 
 # Visual C++ Code Style settings

@@ -38,6 +38,8 @@ add_subdirectory(cmd_pcl_octree_primer)
 add_subdirectory(cmd_rtree_primer)
 add_subdirectory(cmd_simple_boost_rstar_example)
 
+add_subdirectory(cmd_tree_from_inside_predicate)
+
 set_target_properties(
     cmd_app1
     cmd_boost_rtree_primer
@@ -49,6 +51,7 @@ set_target_properties(
     cmd_pcl_octree_primer
     cmd_rtree_primer
     cmd_simple_boost_rstar_example
+    cmd_tree_from_inside_predicate # this is a test, actually
     PROPERTIES FOLDER "Apps 11_vs")
 
 # add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})

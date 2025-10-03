@@ -2,13 +2,7 @@
   "dependencies": [
     "assimp",
     "draco",
-    "tinygltf",
-    "glm",
-    "boost-program-options",
-    "boost-filesystem",
-    "boost-geometry",
-    "json-c",
-    "eigen3"
+    "json-c"
   ],
   "features": {
     "tests": {

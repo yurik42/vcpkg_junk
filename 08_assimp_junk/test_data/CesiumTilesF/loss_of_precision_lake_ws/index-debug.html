@@ -30,7 +30,7 @@
 
         try {
             const tileset = await Cesium.Cesium3DTileset.fromUrl(
-                "tileset.json",
+                "model.json",
             );
 
             logToDiv("Loaded ok...");
@@ -65,7 +65,6 @@
 
                     logToDiv("surface = " + surface.toString());
                     logToDiv("offset = " + offset.toString());
-                    logToDiv("cartographic = " + cartographic.toString());
                 }
             }
 

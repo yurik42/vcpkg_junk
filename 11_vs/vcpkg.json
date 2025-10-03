@@ -2,6 +2,7 @@
   "dependencies": [
     "fmt",
     "pcl",
+    "gtest",
     "boost-geometry"
   ],
   "features": {

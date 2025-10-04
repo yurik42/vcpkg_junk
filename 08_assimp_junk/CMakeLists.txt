@@ -108,6 +108,7 @@ if(BUILD_TESTING)
         test_draco.h
 
         .editorconfig
+        .clang-format
     )
     if (MSVC)
         # That MUST be fixed. CMAKE does not add /Zi flag in Debug configuration

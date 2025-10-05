@@ -297,9 +297,12 @@ public:
     struct feature_table_props_t {
         std::optional<unsigned> POINTS_LENGTH;
         std::optional<unsigned> POSITION_byteOffset;
+        std::optional<unsigned> NORMALS_byteOffset;
         std::optional<unsigned> RGBA_byteOffset;
         std::optional<unsigned> POSITION_QUANTIZED_byteOffset;
         std::optional<unsigned> RGB_byteOffset;
+        std::optional<unsigned> BATCH_ID_byteOffset;
+        std::optional<unsigned> BATCH_ID_componentType;
         std::vector<float> RTC_CENTER;
         std::map<std::string, std::string> extensions;
     };
@@ -354,6 +357,23 @@ public:
             if (auto bo = json_object_object_get(root, "byteOffset"))
                 byteOffset = json_object_get_int(bo);
             props.RGBA_byteOffset = byteOffset;
+        }
+        if (auto po = json_object_object_get(root, "BATCH_ID")) {
+            unsigned byteOffset = 0;
+            if (auto bo = json_object_object_get(root, "byteOffset"))
+                byteOffset = json_object_get_int(bo);
+            props.BATCH_ID_byteOffset = byteOffset;
+            if (auto ct = json_object_object_get(root, "componentType")) {
+                const char *component_type = json_object_get_string(ct);
+                props.BATCH_ID_componentType = batch_reference_component_type(component_type);
+                CONSOLE(component_type << " => " << props.BATCH_ID_componentType.value());
+            }
+        }
+        if (auto po = json_object_object_get(root, "NORMALS")) {
+            unsigned byteOffset = 0;
+            if (auto bo = json_object_object_get(root, "byteOffset"))
+                byteOffset = json_object_get_int(bo);
+            props.NORMALS_byteOffset = byteOffset;
         }
 
         if (!props.POSITION_byteOffset.has_value() && !props.POSITION_QUANTIZED_byteOffset.has_value())

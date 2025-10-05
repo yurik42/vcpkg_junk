@@ -26,7 +26,7 @@ namespace fs = std::filesystem;
 
 #include "../common/CONSOLE.h"
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 namespace cesium_pnts {
 #if 0
@@ -54,7 +54,7 @@ struct PointCloudData {
     std::vector<float> positions;    // x, y, z coordinates
     std::vector<uint8_t> colors;     // RGB or RGBA colors
     std::vector<float> normals;      // Optional normals
-    std::vector<uint32_t> batch_ids; // Optional batch IDs. If empty, then the
+    std::vector<uint8_t> batch_ids;  // Optional batch IDs. If empty, then the
                                      // id mapping is trivial.
     std::vector<PointCloudBatchData> attributes;
     uint32_t pointCount;
@@ -66,7 +66,7 @@ class CesiumPntsDecoder {
 public:
     struct batch_array_t {
         std::string attr;              // The attribute name, e.g. "name"
-        std::vector<std::string> vals; // The attribute vaklues in a array (json text)
+        std::vector<std::string> vals; // The attribute values in a array (json text)
     };
     struct batch_reference_t {
         std::string attr;
@@ -297,12 +297,12 @@ public:
     struct feature_table_props_t {
         std::optional<unsigned> POINTS_LENGTH;
         std::optional<unsigned> POSITION_byteOffset;
-        std::optional<unsigned> NORMALS_byteOffset;
+        std::optional<unsigned> NORMAL_byteOffset;
         std::optional<unsigned> RGBA_byteOffset;
         std::optional<unsigned> POSITION_QUANTIZED_byteOffset;
         std::optional<unsigned> RGB_byteOffset;
         std::optional<unsigned> BATCH_ID_byteOffset;
-        std::optional<unsigned> BATCH_ID_componentType;
+        std::optional<draco::DataType> BATCH_ID_componentType;
         std::vector<float> RTC_CENTER;
         std::map<std::string, std::string> extensions;
     };
@@ -348,32 +348,31 @@ public:
         }
         if (auto po = json_object_object_get(root, "RGB")) {
             unsigned byteOffset = 0;
-            if (auto bo = json_object_object_get(root, "byteOffset"))
+            if (auto bo = json_object_object_get(po, "byteOffset"))
                 byteOffset = json_object_get_int(bo);
             props.RGB_byteOffset = byteOffset;
         }
         if (auto po = json_object_object_get(root, "RGBA")) {
             unsigned byteOffset = 0;
-            if (auto bo = json_object_object_get(root, "byteOffset"))
+            if (auto bo = json_object_object_get(po, "byteOffset"))
                 byteOffset = json_object_get_int(bo);
             props.RGBA_byteOffset = byteOffset;
         }
         if (auto po = json_object_object_get(root, "BATCH_ID")) {
             unsigned byteOffset = 0;
-            if (auto bo = json_object_object_get(root, "byteOffset"))
+            if (auto bo = json_object_object_get(po, "byteOffset"))
                 byteOffset = json_object_get_int(bo);
             props.BATCH_ID_byteOffset = byteOffset;
-            if (auto ct = json_object_object_get(root, "componentType")) {
+            if (auto ct = json_object_object_get(po, "componentType")) {
                 const char *component_type = json_object_get_string(ct);
                 props.BATCH_ID_componentType = batch_reference_component_type(component_type);
-                CONSOLE(component_type << " => " << props.BATCH_ID_componentType.value());
             }
         }
-        if (auto po = json_object_object_get(root, "NORMALS")) {
+        if (auto po = json_object_object_get(root, "NORMAL")) {
             unsigned byteOffset = 0;
-            if (auto bo = json_object_object_get(root, "byteOffset"))
+            if (auto bo = json_object_object_get(po, "byteOffset"))
                 byteOffset = json_object_get_int(bo);
-            props.NORMALS_byteOffset = byteOffset;
+            props.NORMAL_byteOffset = byteOffset;
         }
 
         if (!props.POSITION_byteOffset.has_value() && !props.POSITION_QUANTIZED_byteOffset.has_value())
@@ -406,6 +405,25 @@ public:
         } else if (features.RGBA_byteOffset.has_value()) {
             auto pos = reinterpret_cast<uint8_t const *>(data + features.RGBA_byteOffset.value());
             output.colors.assign(pos, pos + 4 * output.pointCount);
+        }
+
+        if (features.BATCH_ID_byteOffset.has_value()) {
+            auto pos = reinterpret_cast<uint8_t const *>(data + features.BATCH_ID_byteOffset.value());
+            auto type_length = 4;
+            if (features.BATCH_ID_componentType.has_value())
+                type_length = draco::DataTypeLength(features.BATCH_ID_componentType.value());
+            output.batch_ids.assign(pos, pos + type_length * output.pointCount);
+        }
+
+        if (features.NORMAL_byteOffset.has_value()) {
+            auto pos = reinterpret_cast<float const *>(data + features.NORMAL_byteOffset.value());
+            output.normals.assign(pos, pos + 3 * output.pointCount);
+        }
+
+        output.attributes.reserve(batch_header.attr.size());
+        // Extract the entire attribute data
+        for (auto &ap : batch_header.attr) {
+            output.attributes.push_back({});
         }
 
         return true;
@@ -460,7 +478,6 @@ public:
                 array_list *arr = json_object_get_array(val);
                 for (int i = 0; i < arr->length; ++i) {
                     const char *json_string = json_object_to_json_string((json_object *)arr->array[i]);
-                    CONSOLE_EVAL(json_string);
                     batch_arr.vals.push_back(std::string(json_string));
                 }
                 batch_header.attr.push_back(batch_arr);
@@ -663,9 +680,8 @@ TEST_F(DracoF, decodePnts_no_draco) {
     EXPECT_EQ(0, actual.normals.size());
     EXPECT_EQ(50779 * 3, actual.colors.size());
     EXPECT_EQ(50779 * 3, actual.positions.size());
-#if 0 // NOT IMPLEMENTED
-    EXPECT_EQ(50779 * 3, actual.batchIds.size());
-#endif
+
+    EXPECT_EQ(0, actual.batch_ids.size());
 }
 
 /// @brief Mixed case of batch data (both array & references)
@@ -689,11 +705,12 @@ TEST_F(DracoF, decodePnts_no_draco_2) {
     EXPECT_EQ(240, sot.header.batchTableJSONByteLength);
     EXPECT_EQ(128, sot.header.batchTableBinaryByteLength);
 
+    EXPECT_EQ(3, sot.batch_header.attr.size());
+
     EXPECT_EQ(1000, actual.pointCount);
-    EXPECT_EQ(0, actual.normals.size());
+    EXPECT_EQ(1000 * 3, actual.normals.size());
     EXPECT_EQ(0, actual.colors.size());
     EXPECT_EQ(1000 * 3, actual.positions.size());
-#if 0 // NOT IMPLEMENTED
-    EXPECT_EQ(50779 * 3, actual.batchIds.size());
-#endif
+    EXPECT_EQ(1000, actual.batch_ids.size());
+    EXPECT_EQ(3, actual.attributes.size());
 }

@@ -107,6 +107,8 @@ if(BUILD_TESTING)
         test_draco.cpp
         test_draco.h
 
+        test_cesium_geometry_error.cpp
+
         .editorconfig
         .clang-format
     )

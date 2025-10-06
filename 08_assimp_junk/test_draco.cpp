@@ -62,19 +62,24 @@ struct PointCloudData {
     PointCloudData() : pointCount(0) {}
 };
 
+struct batch_array_t {
+    std::string attr;              // The attribute name, e.g. "name"
+    std::vector<std::string> vals; // The attribute values in a array (json text)
+};
+
+struct batch_reference_t {
+    std::string attr;
+    uint32_t byte_offset;
+    draco::DataType component_type; /* BYTE, SHORT, ...*/
+    int32_t number_of_components;   /* SCALAR == 1, VEC2 == 2, VEC3 == 3, VEC4 == 4 */
+};
+
+struct batch_header_t {
+    std::vector<std::variant<batch_array_t, batch_reference_t>> attr;
+};
+
 class CesiumPntsDecoder {
 public:
-    struct batch_array_t {
-        std::string attr;              // The attribute name, e.g. "name"
-        std::vector<std::string> vals; // The attribute values in a array (json text)
-    };
-    struct batch_reference_t {
-        std::string attr;
-        uint32_t byte_offset;
-        draco::DataType component_type; /* BYTE, SHORT, ...*/
-        int32_t number_of_components;   /* SCALAR == 1, VEC2 == 2, VEC3 == 3, VEC4 == 4 */
-    };
-
     static draco::DataType batch_reference_component_type(const char *ct) {
         // clang-format off
 #define R(s, t) if (!strcmp(ct, #s)) return draco::DT_##t
@@ -91,22 +96,6 @@ public:
         return draco::DT_INVALID;
 #undef R
     }
-
-    static int batch_reference_number_of_components(const char *t) {
-        if (!strcmp(t, "SCALAR"))
-            return 1;
-        if (!strcmp(t, "VEC2"))
-            return 2;
-        if (!strcmp(t, "VEC3"))
-            return 3;
-        if (!strcmp(t, "VEC4"))
-            return 4;
-        return 0; // invalid!
-    }
-
-    struct batch_header_t {
-        std::vector<std::variant<batch_array_t, batch_reference_t>> attr;
-    };
 
     PntsHeader header;
     batch_header_t batch_header;
@@ -306,6 +295,18 @@ public:
         std::vector<float> RTC_CENTER;
         std::map<std::string, std::string> extensions;
     };
+
+    static int batch_reference_number_of_components(const char *t) {
+        if (!strcmp(t, "SCALAR"))
+            return 1;
+        if (!strcmp(t, "VEC2"))
+            return 2;
+        if (!strcmp(t, "VEC3"))
+            return 3;
+        if (!strcmp(t, "VEC4"))
+            return 4;
+        return 0; // invalid!
+    }
 
     bool parse_feature_table_json(const char *json_text, feature_table_props_t &props) {
         auto root = json_tokener_parse(json_text);

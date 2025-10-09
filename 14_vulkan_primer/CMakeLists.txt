@@ -6,5 +6,12 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
 
-add_executable(vulkan_app main.cpp)
+add_executable(vulkan_app vulkan_app.cpp)
 target_link_libraries(vulkan_app Vulkan::Vulkan glfw)
+
+find_package(Vulkan REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(glm REQUIRED)
+
+add_executable(vulkan_cube vulkan_cube.cpp)
+target_link_libraries(vulkan_cube Vulkan::Vulkan glfw glm::glm)

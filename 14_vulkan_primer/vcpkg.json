@@ -1,7 +1,8 @@
 {
   "dependencies": [
     "vulkan",
-    "glfw3"
+    "glfw3",
+    "glm"
   ],
   "features": {
     "tests": {

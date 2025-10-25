@@ -4,7 +4,7 @@ namespace virt {
 
 class Dialog : public Widget, public virtual Data {
 public:
-    Dialog() :control1(120) {}
+    Dialog() : control1(120) {}
 
     int32_t control1;
 };

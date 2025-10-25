@@ -7,7 +7,7 @@
 
 
 #ifndef CONSOLE
-#if _DEBUG
+#ifndef NDEBUG
 #define CONSOLE(x)                                                             \
     do {                                                                       \
         std::cout << __func__ << ":" << x << '\n';                             \

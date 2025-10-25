@@ -28,22 +28,30 @@ TEST_F(VirtualBaseF, t1) {
     CONSOLE_EVAL(d1.type_name());
 
     DialogMore d2;
+#if WIN32
     CONSOLE_EVAL(d2.Data::property1);
+#endif
     CONSOLE_EVAL(d2.DataMore::property1);
     CONSOLE_EVAL(d2.Dialog::property1);
     CONSOLE_EVAL(d2.property2);
 
     CONSOLE_EVAL(d2.Dialog::type_name());
+#if WIN32
     CONSOLE_EVAL(d2.Data::type_name());
+#endif
     CONSOLE_EVAL(d2.DataMore::type_name());
 
+#if WIN32
     EXPECT_EQ(0, d2.Data::property1);
+#endif
+    EXPECT_EQ(0, d2.Dialog::property1);
     EXPECT_EQ(42, d2.DataMore::property1);
     EXPECT_EQ(42, d2.DataMore::property2);
 
     Process p;
     p.process(d1);
-    // p.process(d2);
+    p.process(static_cast<DataMore &>(d2));
+    p.process(static_cast<Dialog &>(d2));
 }
 
 TEST_F(VirtualBaseF, t2) {

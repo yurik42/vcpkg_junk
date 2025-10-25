@@ -42,8 +42,6 @@ TEST_F(VirtualBaseF, t1) {
     CONSOLE_EVAL(sizeof(DataMore));
     CONSOLE_EVAL(sizeof(DialogMore));
 
-    EXPECT_EQ(sizeof(Dialog), sizeof(Widget) + sizeof(Data));
-
     Dialog d1;
     EXPECT_EQ(0, d1.property1);
     EXPECT_STREQ("class Data", d1.type_name());

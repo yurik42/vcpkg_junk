@@ -4,7 +4,9 @@ namespace plain {
 
 class Dialog : public Widget, public Data {
 public:
-    Dialog() {}
+    Dialog() :control1(120) {}
+
+    int32_t control1;
 };
 
 class DataMore : public Data {
@@ -19,7 +21,9 @@ public:
 
 class DialogMore : public Dialog, public DataMore {
 public:
-    DialogMore() {}
+    DialogMore() : control2 (55) {}
+
+    int32_t control2;
 };
 
 class Process {

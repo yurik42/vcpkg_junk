@@ -43,12 +43,12 @@ TEST_F(VirtualBaseF, t1) {
 
     DialogMore d2;
     EXPECT_STREQ("class Data", d2.Dialog::type_name());
-#if _WIN32
+#if _MSC_VER && !defined(__clang__)
     EXPECT_STREQ("class Data", d2.Data::type_name());
 #endif
     EXPECT_STREQ("class DataMore", d2.DataMore::type_name());
 
-#if _WIN32
+#if _MSC_VER && !defined(__clang__)
     EXPECT_EQ(0, d2.Data::property1);
 #endif
     EXPECT_EQ(0, d2.Dialog::property1);

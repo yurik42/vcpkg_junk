@@ -3,18 +3,21 @@
 //
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 #include <string>
 
 #include "test_unsorted.h"
 
 class Widget {
+    void *handle;
+
 public:
-    Widget() {}
+    Widget() : handle(0) {}
 };
 
 class Data {
 public:
-    int property1;
+    int32_t property1;
 
 public:
     Data() : property1{} {}

@@ -9,7 +9,7 @@ public:
 
 class DataMore : public virtual Data {
 public:
-    int property2;
+    int32_t property2;
 
 public:
     DataMore() : property2{42} { property1 = 42; }

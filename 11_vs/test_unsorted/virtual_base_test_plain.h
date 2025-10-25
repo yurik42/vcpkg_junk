@@ -4,7 +4,7 @@ namespace plain {
 
 class Dialog : public Widget, public Data {
 public:
-    Dialog() :control1(120) {}
+    Dialog() : control1(120) {}
 
     int32_t control1;
 };

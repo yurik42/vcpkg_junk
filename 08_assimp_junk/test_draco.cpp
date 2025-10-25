@@ -377,7 +377,7 @@ public:
         }
 
         if (!props.POSITION_byteOffset.has_value() && !props.POSITION_QUANTIZED_byteOffset.has_value())
-            return false_because("Nether POSITION nor POSITION_QUANTIZED defined");
+            return false_because("Neither POSITION nor POSITION_QUANTIZED defined");
 
         return true;
     }

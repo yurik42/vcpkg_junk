@@ -253,16 +253,16 @@ public:
         }
 
         // Extract generic attributes
-        std::vector<int32_t> generic_attributres_ids;
+        std::vector<int32_t> generic_attributes_ids;
         for (int32_t i = 0; i < pointCloud->num_attributes(); ++i) {
             const draco::PointAttribute *attr = pointCloud->attribute(i);
             if (attr->attribute_type() == draco::GeometryAttribute::GENERIC) {
-                generic_attributres_ids.push_back(i);
+                generic_attributes_ids.push_back(i);
             }
         }
-        output.attributes.reserve(generic_attributres_ids.size());
+        output.attributes.reserve(generic_attributes_ids.size());
         // Extract the entire attribute data
-        for (auto i : generic_attributres_ids) {
+        for (auto i : generic_attributes_ids) {
             const draco::PointAttribute *attr = pointCloud->attribute(i);
             output.attributes.push_back({});
             if (attr->attribute_type() == draco::GeometryAttribute::GENERIC) {

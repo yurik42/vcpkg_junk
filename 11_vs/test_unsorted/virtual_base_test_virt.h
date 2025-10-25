@@ -21,7 +21,7 @@ public:
 
 class DialogMore : public Dialog, public DataMore {
 public:
-    DialogMore() : control2 (55) {}
+    DialogMore() : control2(55) {}
 
     int32_t control2;
 };

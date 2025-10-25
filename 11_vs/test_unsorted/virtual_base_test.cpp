@@ -24,6 +24,7 @@ public:
 public:
     Data() : property1{} {}
 
+    virtual ~Data() {}
     virtual const char *type_name() const { return "class Data"; }
 };
 
@@ -113,4 +114,82 @@ TEST_F(VirtualBaseF, t3) {
     w.print(); // 0
     derived d;
     d.print(); // 5
+}
+
+/* One more design. The data is stored in pointers */
+
+namespace ptr {
+
+class Dialog : public Widget {
+public:
+    std::unique_ptr<Data> m_data;
+    virtual Data &data() { return *m_data.get(); };
+
+public:
+    Dialog() : m_data{new Data}, control1(120) {}
+
+    int32_t control1;
+};
+
+class DataMore : public Data {
+public:
+    int32_t property2;
+
+public:
+    DataMore() : property2{42} { property1 = 42; }
+
+    const char *type_name() const override { return "class DataMore"; }
+};
+
+class DialogMore : public Dialog {
+public:
+    DialogMore() : control2(55) { m_data.reset(new DataMore); }
+
+    int32_t control2;
+
+    DataMore &data() override {
+        return *dynamic_cast<DataMore *>(m_data.get());
+    };
+};
+
+class Process {
+public:
+    void process(Data const &data) {
+        std::cout << "data type: " << data.type_name() << ":" << data.property1
+                  << std::endl;
+    }
+};
+
+} // namespace ptr
+
+TEST_F(VirtualBaseF, t4) {
+    using namespace ptr;
+
+    CONSOLE_EVAL(sizeof(Widget));
+    CONSOLE_EVAL(sizeof(Data));
+
+    CONSOLE_EVAL(sizeof(Dialog));
+    CONSOLE_EVAL(sizeof(DataMore));
+    CONSOLE_EVAL(sizeof(DialogMore));
+
+    Dialog d1;
+    EXPECT_EQ(0, d1.data().property1);
+    EXPECT_STREQ("class Data", d1.data().type_name());
+
+    DialogMore d2;
+    EXPECT_EQ(42, d2.data().property1);
+    EXPECT_EQ(42, d2.data().property1);
+    EXPECT_EQ(42, d2.data().property2);
+
+    EXPECT_EQ(42, d2.data().property1);
+    EXPECT_EQ(42, d2.data().property2);
+
+    Dialog &dp1 = d2;
+
+    dp1.data().property1 = 33;
+    EXPECT_EQ(33, d2.data().property1);
+
+    Process p;
+    p.process(d1.data());
+    p.process(d2.data());
 }

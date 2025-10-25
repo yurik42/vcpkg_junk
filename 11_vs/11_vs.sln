@@ -37,6 +37,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apps", "Apps", "{21BE19AD-C
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_unicode_filenames", "test_unicode_filenames\test_unicode_filenames.vcxproj", "{42B8315A-86C1-442A-B3D6-2945A33441D2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_unsorted", "test_unsorted\test_unsorted.vcxproj", "{025A615F-FAF9-4103-8FF9-966F10D20C3C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -91,6 +93,10 @@ Global
 		{42B8315A-86C1-442A-B3D6-2945A33441D2}.Debug|x64.Build.0 = Debug|x64
 		{42B8315A-86C1-442A-B3D6-2945A33441D2}.Release|x64.ActiveCfg = Release|x64
 		{42B8315A-86C1-442A-B3D6-2945A33441D2}.Release|x64.Build.0 = Release|x64
+		{025A615F-FAF9-4103-8FF9-966F10D20C3C}.Debug|x64.ActiveCfg = Debug|x64
+		{025A615F-FAF9-4103-8FF9-966F10D20C3C}.Debug|x64.Build.0 = Debug|x64
+		{025A615F-FAF9-4103-8FF9-966F10D20C3C}.Release|x64.ActiveCfg = Release|x64
+		{025A615F-FAF9-4103-8FF9-966F10D20C3C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -108,6 +114,7 @@ Global
 		{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8} = {21BE19AD-CCDE-47DE-9F51-B898252B55B0}
 		{B351BEC5-3307-4EB1-BA76-5AA96BE1EA5E} = {26CA4B74-8A2D-45DE-A31E-29408BD4F391}
 		{42B8315A-86C1-442A-B3D6-2945A33441D2} = {26CA4B74-8A2D-45DE-A31E-29408BD4F391}
+		{025A615F-FAF9-4103-8FF9-966F10D20C3C} = {26CA4B74-8A2D-45DE-A31E-29408BD4F391}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D73ACCA5-1FA7-49C9-BA5F-786510D3EBF3}

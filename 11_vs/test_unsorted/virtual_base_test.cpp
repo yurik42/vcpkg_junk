@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 #include <stdint.h>
+
+#include <cstddef>
 #include <string>
 
 #include "test_unsorted.h"
@@ -39,6 +41,8 @@ TEST_F(VirtualBaseF, t1) {
     CONSOLE_EVAL(sizeof(Dialog));
     CONSOLE_EVAL(sizeof(DataMore));
     CONSOLE_EVAL(sizeof(DialogMore));
+
+    EXPECT_EQ(sizeof(Dialog), sizeof(Widget) + sizeof(Data));
 
     Dialog d1;
     EXPECT_EQ(0, d1.property1);

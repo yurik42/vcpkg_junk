@@ -132,6 +132,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_unsorted.h" />
+    <ClInclude Include="virtual_base_test_plain.h" />
+    <ClInclude Include="virtual_base_test_virt.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

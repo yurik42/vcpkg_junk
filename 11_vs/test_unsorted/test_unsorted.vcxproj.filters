@@ -23,5 +23,11 @@
     <ClInclude Include="test_unsorted.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="virtual_base_test_plain.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="virtual_base_test_virt.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

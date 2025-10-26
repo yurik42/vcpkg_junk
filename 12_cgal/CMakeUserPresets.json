@@ -33,6 +33,20 @@
       "cacheVariables": {
         "VCPKG_INSTALLED_DIR": "$env{VCPKG_ROOT}/installed"
       }
+    },
+    {
+      "name": "kestrel-clang",
+      "inherits": "vcpkg",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build-linux-clang",
+      "environment": {
+        "VCPKG_ROOT": "/home/yyk/src/vcpkg"
+      },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "VCPKG_INSTALLED_DIR": "$env{VCPKG_ROOT}/installed"
+      }
     }
   ]
 }

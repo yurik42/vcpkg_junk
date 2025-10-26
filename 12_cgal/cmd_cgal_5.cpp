@@ -1,15 +1,15 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Polygon_2_algorithms.h>
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef K::Point_2 Point_2;
 typedef CGAL::Polygon_2<K> Polygon_2;
 
 // Helper function to compute perimeter
-double compute_perimeter(const Polygon_2& poly) {
+double compute_perimeter(const Polygon_2 &poly) {
     double perimeter = 0.0;
     for (auto eit = poly.edges_begin(); eit != poly.edges_end(); ++eit) {
         perimeter += std::sqrt(CGAL::to_double(eit->squared_length()));

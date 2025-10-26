@@ -1,13 +1,13 @@
 ## How to configure
 
-Windows
+Using CMake presets (recommended):
 
-    cmake -S . -B build-vs2022-x64 -DCMAKE_TOOLCHAIN_FILE=E:/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -DBUILD_TESTING=ON
+    cmake --preset=kestrel         # Linux (GCC)
+    cmake --preset=kestrel-clang   # Linux (Clang)
+    cmake --preset=default         # Windows (G:\opt\vcpkg)
+    cmake --preset=cherry          # Windows (E:\opt\vcpkg)
 
-Linux (x64 or arm64)
+Build:
 
-    cmake -S . -B build-linux -DCMAKE_TOOLCHAIN_FILE=/home/yyk/src/vcpkg/scripts/buildsystems/vcpkg.cmake
+    cmake --build --preset=kestrel
 
-or with clang
-
-   cmake -S . -B build-linux -DCMAKE_TOOLCHAIN_FILE=/home/yyk/src/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++

@@ -12,7 +12,8 @@
       "name": "windows-developmentyk",
       "inherits": "vcpkg",
       "environment": {
-        "VCPKG_ROOT": "c:\\opt\\vcpkg"
+        "VCPKG_ROOT": "c:\\opt\\vcpkg",
+        "VULKAN_SDK": "c:\\opt\\VulkanSDK\\1.4.328.1"
       }
     },
     {

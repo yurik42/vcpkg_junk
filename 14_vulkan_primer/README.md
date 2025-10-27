@@ -1,10 +1,11 @@
 # Vulkan Primer
 
-Two example Vulkan applications demonstrating graphics programming with Vulkan API, GLFW, and GLM.
+Three example Vulkan applications demonstrating graphics programming with Vulkan API, GLFW, and GLM.
 
 ## Applications
 
 - **vulkan_app** - Basic Vulkan window initialization
+- **vulkan_triangle** - Classic "Hello Triangle" with vertex colors (red, green, blue)
 - **vulkan_cube** - 3D rotating colored cube with depth buffering
 
 ## Prerequisites
@@ -46,4 +47,5 @@ Build:
 ## Running
 
     ./build-linux/vulkan_app
+    ./build-linux/vulkan_triangle
     ./build-linux/vulkan_cube

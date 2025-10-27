@@ -15,9 +15,11 @@ Three example Vulkan applications demonstrating graphics programming with Vulkan
 - CMake 3.10+
 - C++17 compiler
 
-Ubuntu Linux required more dependencies:
+Ubuntu Linux required more dependencies and tools:
 
        $ sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev
+       $ sudo apt-get install -y glslang-tools
+
 
 ## Building
 

@@ -194,7 +194,11 @@ private:
         createInfo.ppEnabledExtensionNames = glfwExtensions;
         createInfo.enabledLayerCount = 0;
 
-        vkCreateInstance(&createInfo, nullptr, &instance);
+        VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
+        if (result != VK_SUCCESS) {
+            std::cerr << "Failed to create Vulkan instance! Error code: " << result << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
     }
 
     void createSurface() { glfwCreateWindowSurface(instance, window, nullptr, &surface); }

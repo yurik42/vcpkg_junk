@@ -2,7 +2,7 @@
 
 Apparently
 
-	cd cmd_app1
+	cd cmd_fmt_example
 	vcpkg integrate install
 
 

@@ -27,7 +27,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-add_subdirectory(cmd_app1)
+add_subdirectory(cmd_fmt_example)
 add_subdirectory(cmd_boost_rtree_primer)
 add_subdirectory(cmd_boost_rtree_traversal)
 add_subdirectory(cmd_boost_rtree_view_example)
@@ -41,7 +41,7 @@ add_subdirectory(cmd_simple_boost_rstar_example)
 add_subdirectory(cmd_tree_from_inside_predicate)
 
 set_target_properties(
-    cmd_app1
+    cmd_fmt_example
     cmd_boost_rtree_primer
     cmd_boost_rtree_traversal
     cmd_boost_rtree_view_example

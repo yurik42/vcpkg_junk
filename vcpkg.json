@@ -83,6 +83,7 @@
       "dependencies": [
         "fmt",
         "pcl",
+        "stb",
         "boost-geometry"
       ]
     }

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35004.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_app1", "cmd_app1\cmd_app1.vcxproj", "{B25E9776-C4C9-48BE-84BD-9E125374E18D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_fmt_example", "cmd_fmt_example\cmd_fmt_example.vcxproj", "{B25E9776-C4C9-48BE-84BD-9E125374E18D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_mem_allocate", "cmd_mem_allocate\cmd_mem_allocate.vcxproj", "{4ACC0D7C-DDF7-4D82-9740-8137FB883688}"
 EndProject
@@ -28,6 +28,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_boost_rtree_view_example", "cmd_boost_rtree_view_example\cmd_boost_rtree_view_example.vcxproj", "{0C14A066-82DD-4DBD-89E2-96DFE44503A8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_cesium_3d_tiles_pointcloud", "cmd_cesium_3d_tiles_pointcloud\cmd_cesium_3d_tiles_pointcloud.vcxproj", "{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_sombrero_elevation_generator", "cmd_sombrero_elevation_generator\cmd_sombrero_elevation_generator.vcxproj", "{479BCDCF-E66D-4708-9BC3-19E62AB4D694}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd_tree_from_inside_predicate", "cmd_tree_from_inside_predicate\cmd_tree_from_inside_predicate.vcxproj", "{B351BEC5-3307-4EB1-BA76-5AA96BE1EA5E}"
 EndProject
@@ -85,6 +87,10 @@ Global
 		{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}.Debug|x64.Build.0 = Debug|x64
 		{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}.Release|x64.ActiveCfg = Release|x64
 		{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8}.Release|x64.Build.0 = Release|x64
+		{479BCDCF-E66D-4708-9BC3-19E62AB4D694}.Debug|x64.ActiveCfg = Debug|x64
+		{479BCDCF-E66D-4708-9BC3-19E62AB4D694}.Debug|x64.Build.0 = Debug|x64
+		{479BCDCF-E66D-4708-9BC3-19E62AB4D694}.Release|x64.ActiveCfg = Release|x64
+		{479BCDCF-E66D-4708-9BC3-19E62AB4D694}.Release|x64.Build.0 = Release|x64
 		{B351BEC5-3307-4EB1-BA76-5AA96BE1EA5E}.Debug|x64.ActiveCfg = Debug|x64
 		{B351BEC5-3307-4EB1-BA76-5AA96BE1EA5E}.Debug|x64.Build.0 = Debug|x64
 		{B351BEC5-3307-4EB1-BA76-5AA96BE1EA5E}.Release|x64.ActiveCfg = Release|x64
@@ -112,6 +118,7 @@ Global
 		{FD8B9822-B41E-4C14-855F-8AC0E18C6B6F} = {21BE19AD-CCDE-47DE-9F51-B898252B55B0}
 		{0C14A066-82DD-4DBD-89E2-96DFE44503A8} = {21BE19AD-CCDE-47DE-9F51-B898252B55B0}
 		{4C66D991-B0E9-4BDB-B81E-F32C12AC2BD8} = {21BE19AD-CCDE-47DE-9F51-B898252B55B0}
+		{479BCDCF-E66D-4708-9BC3-19E62AB4D694} = {21BE19AD-CCDE-47DE-9F51-B898252B55B0}
 		{B351BEC5-3307-4EB1-BA76-5AA96BE1EA5E} = {26CA4B74-8A2D-45DE-A31E-29408BD4F391}
 		{42B8315A-86C1-442A-B3D6-2945A33441D2} = {26CA4B74-8A2D-45DE-A31E-29408BD4F391}
 		{025A615F-FAF9-4103-8FF9-966F10D20C3C} = {26CA4B74-8A2D-45DE-A31E-29408BD4F391}

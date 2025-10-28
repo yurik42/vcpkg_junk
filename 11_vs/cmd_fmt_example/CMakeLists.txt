@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.15)
-project(cmd_app1)
+project(cmd_fmt_example)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add your source files here
-add_executable(cmd_app1
+add_executable(cmd_fmt_example
     main.cpp)
 
 #The package fmt provides CMake targets:
@@ -20,4 +20,4 @@ add_executable(cmd_app1
 # Find Boost (adjust components as needed)
 find_package(fmt REQUIRED)
 
-target_link_libraries(cmd_app1 PRIVATE fmt::fmt)
+target_link_libraries(cmd_fmt_example PRIVATE fmt::fmt)

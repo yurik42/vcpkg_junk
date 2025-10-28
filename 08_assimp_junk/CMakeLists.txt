@@ -3,7 +3,7 @@
 # https://learn.microsoft.com/en-us/vcpkg/users/buildsystems/cmake-integration#settings-reference
 #
 
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.22)
 
 if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
@@ -36,6 +36,11 @@ find_package(json-c CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
 
 add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
+
+# "VCPKG_TARGET_TRIPLET": "x64-linux-dynamic"
+if ("${VCPKG_TARGET_TRIPLET}" STREQUAL "x64-linux-dynamic")
+   add_definitions(-DX64_LINUX_DYNAMIC=1)
+endif()
 
 add_executable(cmd_getargs_08
     cmd_getargs.cpp
@@ -79,6 +84,11 @@ target_include_directories(cmd_tinygltf_example_08
     PRIVATE ${TINYGLTF_INCLUDE_DIRS})
 set_target_properties(cmd_tinygltf_example_08 PROPERTIES FOLDER "Apps")
 
+find_package(draco REQUIRED)
+add_executable(cmd_pnts_decoder cmd_pnts_decoder.cpp)
+target_link_libraries(cmd_pnts_decoder PRIVATE draco::draco)
+set_target_properties(cmd_pnts_decoder PROPERTIES FOLDER "Apps")
+
 if(BUILD_TESTING)
     enable_testing()
     
@@ -94,9 +104,21 @@ if(BUILD_TESTING)
         meshtoolbox.h
         test_assimp.cpp
         test_boost.cpp
+        test_draco.cpp
+        test_draco.h
+
+        test_cesium_geometry_error.cpp
 
         .editorconfig
+        .clang-format
     )
+    if (MSVC)
+        # That MUST be fixed. CMAKE does not add /Zi flag in Debug configuration
+        target_compile_options(test_08 PRIVATE
+            $<$<CONFIG:Debug>:/Zi>
+            $<$<CONFIG:RelWithDebInfo>:/Zi> # Example for RelWithDebInfo as well
+        )
+    endif()
     target_include_directories(test_08 PRIVATE ${Stb_INCLUDE_DIR} ${TINYGLTF_INCLUDE_DIRS})
     target_link_libraries(test_08 PRIVATE
         Boost::program_options
@@ -105,6 +127,7 @@ if(BUILD_TESTING)
         assimp::assimp
         json-c::json-c
         Eigen3::Eigen
+        draco::draco
 
         GTest::gtest
         GTest::gtest_main

@@ -19,6 +19,11 @@ namespace fs = std::filesystem;
 #if _WIN32
 #define STB_IMAGE_IMPLEMENTATION
 #endif
+
+#if X64_LINUX_DYNAMIC
+#define STB_IMAGE_IMPLEMENTATION
+#endif
+
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
@@ -33,8 +38,8 @@ namespace fs = std::filesystem;
 #define TINYGLTF_NO_INCLUDE_STB_IMAGE
 #define TINYGLTF_NO_INCLUDE_STB_IMAGE_WRITE
 
-//#define STB_IMAGE_IMPLEMENTATION // is already defined above
-//#define STB_IMAGE_WRITE_IMPLEMENTATION
+// #define STB_IMAGE_IMPLEMENTATION // is already defined above
+// #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <tiny_gltf.h>
 
 #include "../common/CONSOLE.h"
@@ -785,9 +790,10 @@ TEST_F(AssimpF, meshtoolbox_stb_image) {
 
 /// @brief Load a large JPG file
 /// @param --gtest_filter=AssimpF.meshtoolbox_stb_image_jpg
-/// @param  
+/// @param
 TEST_F(AssimpF, meshtoolbox_stb_image_jpg) {
-    const char *filename_jpg = R"(C:\home\work\GM-19017\out\scene_0_dense_mesh_material_0_map_kd.jpg)";
+    const char *filename_jpg =
+        R"(C:\home\work\GM-19017\out\scene_0_dense_mesh_material_0_map_kd.jpg)";
     if (!fs::is_regular_file(filename_jpg))
         GTEST_SKIP();
 
@@ -816,20 +822,63 @@ TEST_F(AssimpF, meshtoolbox_stb_image_jpg) {
 
 /// @brief Read a small jpg file with stb library
 /// @param --gtest_filter=AssimpF.stb_read_jpg
-/// @param  
+/// @param
 TEST_F(AssimpF, stb_read_jpg) {
     auto logo_jpg = test_data("BoxTextured-glTF_jpg/CesiumLogoFlat.jpg");
     ASSERT_TRUE(fs::is_regular_file(logo_jpg));
 
     int width, height, channels;
-    auto stbi_uc_deleter = [](stbi_uc *p) { if (p) stbi_image_free(p); };
+    auto stbi_uc_deleter = [](stbi_uc *p) {
+        if (p)
+            stbi_image_free(p);
+    };
     auto data = std::unique_ptr<stbi_uc, decltype(stbi_uc_deleter)>(
-        stbi_load(logo_jpg.string().c_str(), &width, &height, &channels, 0), 
+        stbi_load(logo_jpg.string().c_str(), &width, &height, &channels, 0),
         stbi_uc_deleter);
-    ASSERT_TRUE(data) << "Failed to load image: " << logo_jpg;
+
+    if (!data && strcmp("unknown image type", stbi_failure_reason()) ==0)
+        GTEST_SKIP() << stbi_failure_reason();
+    ASSERT_TRUE(data) << "Failed: " << logo_jpg
+                      << ", reason:" << stbi_failure_reason();
 
     ASSERT_EQ(211, width);
     ASSERT_EQ(211, height);
+    ASSERT_EQ(3, channels);
+
+    // Optionally, check a pixel value
+    if (width > 0 && height > 0 && channels >= 3) {
+        int idx = 0; // top-left pixel
+        unsigned char r = data.get()[idx * channels + 0];
+        unsigned char g = data.get()[idx * channels + 1];
+        unsigned char b = data.get()[idx * channels + 2];
+        CONSOLE_EVAL(unsigned(r));
+        CONSOLE_EVAL(unsigned(g));
+        CONSOLE_EVAL(unsigned(b));
+    }
+}
+
+/// @brief Read a small jpg file with stb library
+/// @param --gtest_filter=AssimpF.stb_read_jpg_too
+/// @param
+TEST_F(AssimpF, stb_read_jpg_too) {
+    auto logo_jpg = test_data("ctzb3.jpg");
+    ASSERT_TRUE(fs::is_regular_file(logo_jpg));
+
+    int width, height, channels;
+    auto stbi_uc_deleter = [](stbi_uc *p) {
+        if (p)
+            stbi_image_free(p);
+    };
+    auto data = std::unique_ptr<stbi_uc, decltype(stbi_uc_deleter)>(
+        stbi_load(logo_jpg.string().c_str(), &width, &height, &channels, 0),
+        stbi_uc_deleter);
+    if (!data && strcmp("unknown image type", stbi_failure_reason()) ==0)
+        GTEST_SKIP() << stbi_failure_reason();
+    ASSERT_TRUE(data) << "Failed: " << logo_jpg
+                      << ", reason:" << stbi_failure_reason();
+
+    ASSERT_EQ(600, width);
+    ASSERT_EQ(418, height);
     ASSERT_EQ(3, channels);
 
     // Optionally, check a pixel value
@@ -1116,6 +1165,55 @@ TEST_F(AssimpF, meshtoolbox_axis) {
     }
 }
 
+
+/// @brief Read a .GLB file (converted from a .pnts) and dump its content
+/// @param --gtest_filter=AssimpF.load_glb_point_cloud
+/// @param  
+TEST_F(AssimpF, load_glb_point_cloud)
+{
+    auto zero_pnts = test_data("cesium/pnts/0-draco.glb");
+
+    ASSERT_TRUE(fs::is_regular_file(zero_pnts));
+
+    Assimp::Importer import;
+    auto model = import.ReadFile(zero_pnts.string(), 0);
+    ASSERT_TRUE(model);
+
+    auto ws = create_ws();
+    Assimp::Exporter exp;
+    auto flags = aiProcess_ValidateDataStructure | 0;
+    {
+        std::string filename = (ws / "model.xml").string();
+        auto err = exp.Export(model, "assxml", filename, flags);
+        EXPECT_EQ(AI_SUCCESS, err) << "Failed export to " << filename;
+        ASSERT_TRUE(fs::is_regular_file(filename)) << filename;
+    }
+}
+
+/// @brief Read a .GLB file (converted from a NO-DRACO .pnts) and dump its content
+/// @param --gtest_filter=AssimpF.load_glb_point_cloud
+/// @param
+TEST_F(AssimpF, load_glb_point_cloud_no_draco) {
+    auto zero_pnts = test_data("cesium/pnts/0.glb");
+
+    ASSERT_TRUE(fs::is_regular_file(zero_pnts));
+
+    Assimp::Importer import;
+    auto model = import.ReadFile(zero_pnts.string(), 0);
+    ASSERT_TRUE(model);
+
+    auto ws = create_ws();
+    Assimp::Exporter exp;
+    auto flags = aiProcess_ValidateDataStructure | 0;
+    {
+        std::string filename = (ws / "model.xml").string();
+        auto err = exp.Export(model, "assxml", filename, flags);
+        EXPECT_EQ(AI_SUCCESS, err) << "Failed export to " << filename;
+        ASSERT_TRUE(fs::is_regular_file(filename)) << filename;
+    }
+}
+
+
 void PrintTo(aiVector3D const &v, std::ostream *os) { *os << v; }
 
 class TransF : public AssimpF {
@@ -1167,7 +1265,7 @@ public:
         double lon_deg, lat_deg, height;
     };
 
-    auto ecef_to_geodetic (double x, double y, double z) {
+    auto ecef_to_geodetic(double x, double y, double z) {
         // WGS84 constants
         constexpr double a = 6378137.0;           // semi-major axis
         constexpr double f = 1.0 / 298.257223563; // flattening
@@ -1478,25 +1576,26 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
         CONSOLE_EVAL(actual->mMeshes[0]->mAABB);
         CONSOLE_EVAL(actual->mRootNode->mTransformation);
 
-        EXPECT_EQ(aiMatrix4x4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0,
-                                1), actual->mRootNode->mTransformation);
+        EXPECT_EQ(aiMatrix4x4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1),
+                  actual->mRootNode->mTransformation);
 
         auto bounding_box = compute_aabb(actual);
         CONSOLE_EVAL(bounding_box.mMin);
         CONSOLE_EVAL(bounding_box.mMax);
-        //mMin : {496805.969, 4420721.5, 1625.33777}
-        //mMax : {496866.031, 4420784, 1636.51453}
+        // mMin : {496805.969, 4420721.5, 1625.33777}
+        // mMax : {496866.031, 4420784, 1636.51453}
 
         aiMatrix4x4 translate;
         aiMatrix4x4::Translation(-bounding_box.mMin, translate);
         CONSOLE_EVAL(translate);
         {
-            // Verify sure the transform works as expected - moves min_point to (0,0,0)
+            // Verify sure the transform works as expected - moves min_point to
+            // (0,0,0)
             aiVector3D min_point{496805.969, 4420721.5, 1625.33777};
             EXPECT_EQ(min_point, bounding_box.mMin);
             CONSOLE_EVAL(translate * min_point);
             EXPECT_TRUE(aiVector3D(0, 0, 0) == translate * min_point);
-            aiVector3D max_point { 496866.031, 4420784, 1636.51453 };
+            aiVector3D max_point{496866.031, 4420784, 1636.51453};
             CONSOLE_EVAL(translate * max_point);
             EXPECT_TRUE(aiVector3D(60.0625, 62.5, 11.1767578) ==
                         translate * max_point);
@@ -1512,8 +1611,10 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
         auto actual_status =
             exporter.Export(actual, "glb2", (ws / "actual.glb").string());
         ASSERT_EQ(0, actual_status);
-        ASSERT_EQ(0, exporter.Export(actual, "assxml", (ws / "actual.xml").string()));
-        ASSERT_EQ(0, exporter.Export(actual, "ply", (ws / "actual.ply").string()));
+        ASSERT_EQ(
+            0, exporter.Export(actual, "assxml", (ws / "actual.xml").string()));
+        ASSERT_EQ(0,
+                  exporter.Export(actual, "ply", (ws / "actual.ply").string()));
     }
     // verify the saved model
     {
@@ -1569,17 +1670,20 @@ TEST_F(TransF, c3dprototype_translate_coordinates) {
 }
 
 /*
-    echo "EASTING NORTHING" | cs2cs +proj=utm +zone=13 +ellps=WGS84 +to +proj=latlong +datum=WGS84
+    echo "EASTING NORTHING" | cs2cs +proj=utm +zone=13 +ellps=WGS84 +to
+   +proj=latlong +datum=WGS84
 
     in decimal format
 
-    echo "EASTING NORTHING" | cs2cs +proj=utm +zone=13 +ellps=WGS84 +to +proj=latlong +ellps=WGS84 -f "%.8f"
+    echo "EASTING NORTHING" | cs2cs +proj=utm +zone=13 +ellps=WGS84 +to
+   +proj=latlong +ellps=WGS84 -f "%.8f"
 
     To produce a tileset json
 
-    npx 3d-tiles-tools createTilesetJson -f -i cropped/model.glb -o cropped/model.json --cartographicPositionDegrees -105.03697644 39.93681616 0.00000000
+    npx 3d-tiles-tools createTilesetJson -f -i cropped/model.glb -o
+   cropped/model.json --cartographicPositionDegrees -105.03697644 39.93681616
+   0.00000000
 */
-
 
 static const char *cropped_model_glb = R"({
   "asset": {
@@ -1631,13 +1735,16 @@ static const char *cropped_model_glb = R"({
 
 /// @brief Load a GLB file and generate tileset.json
 /// @param --gtest_filter=TransF.c3dprototype_make_tileset_json
-/// @param  
+/// @param
 TEST_F(TransF, c3dprototype_make_tileset_json) {
     auto ws = create_ws();
     {
-        // Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE, aiDefaultLogStream_STDOUT);
+        // Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE,
+        // aiDefaultLogStream_STDOUT);
         auto model_glb =
-            test_data("CesiumTilesF/GM20993_export_cropped_as_cesium3d_tile/model.glb").string();
+            test_data("CesiumTilesF/GM20993_export_cropped_as_cesium3d_tile/"
+                      "model.glb")
+                .string();
         ASSERT_TRUE(fs::is_regular_file(model_glb));
 
         Assimp::Importer importer;
@@ -1661,17 +1768,17 @@ TEST_F(TransF, c3dprototype_make_tileset_json) {
     }
     {
         double b[] = {496840.7947318554,
-                        4420745.123109758,
-                        1628.3355102539062,
-                        1.4763270616531372,
-                        0,
-                        0,
-                        0,
-                        1.3503844738006592,
-                        0,
-                        0,
-                        0,
-                        1.38446044921875};
+                      4420745.123109758,
+                      1628.3355102539062,
+                      1.4763270616531372,
+                      0,
+                      0,
+                      0,
+                      1.3503844738006592,
+                      0,
+                      0,
+                      0,
+                      1.38446044921875};
 
         double t[] = {0.9657585935309204,
                       -0.2594423616551052,
@@ -1689,22 +1796,21 @@ TEST_F(TransF, c3dprototype_make_tileset_json) {
                       -4729526.648222642,
                       4072608.8590562753,
                       1};
-        aiVector3t<double> center {t[0], t[1], t[2]};
-        aiMatrix4x4t<double> transform{
-            t[0], t[4], t[8], t[12],
-            t[1], t[5], t[9], t[13],
-            t[2], t[6], t[10], t[14],
-            t[3], t[7], t[11], t[15]
-        };
-        
+        aiVector3t<double> center{t[0], t[1], t[2]};
+        aiMatrix4x4t<double> transform{t[0], t[4],  t[8],  t[12], t[1],  t[5],
+                                       t[9], t[13], t[2],  t[6],  t[10], t[14],
+                                       t[3], t[7],  t[11], t[15]};
+
         auto center_transformed = transform * center;
         CONSOLE_EVAL(center_transformed);
 
         // original: -105.03697644 39.93681616 0.00000000
         // Geodetic: lon=-105.036965 lat=39.9368138 height=7.72997737e-08
 
-        auto geo = ecef_to_geodetic(center_transformed.x, center_transformed.y, center_transformed.z);
-        CONSOLE("Geodetic: lon=" << geo.lon_deg << " lat=" << geo.lat_deg << " height=" << geo.height);
+        auto geo = ecef_to_geodetic(center_transformed.x, center_transformed.y,
+                                    center_transformed.z);
+        CONSOLE("Geodetic: lon=" << geo.lon_deg << " lat=" << geo.lat_deg
+                                 << " height=" << geo.height);
     }
 }
 
@@ -1750,40 +1856,37 @@ TEST_F(TransF, c3dprototype_box_utm_13N_coordinates) {
         }
     }
     {
-        double t[] = {
-            0.965758551283516,
-            -0.259442518918477,
-            0,
-            0,
-            0.16654731910137624,
-            0.6199619795783732,
-            0.7667523292285515,
-            0,
-            -0.19892815568166483,
-            -0.7404976186690275,
-            0.641943039235251,
-            0,
-            -1270544.7618038643,
-            -4729523.416653709,
-            4072612.5998952053,
-            1
-        };
+        double t[] = {0.965758551283516,
+                      -0.259442518918477,
+                      0,
+                      0,
+                      0.16654731910137624,
+                      0.6199619795783732,
+                      0.7667523292285515,
+                      0,
+                      -0.19892815568166483,
+                      -0.7404976186690275,
+                      0.641943039235251,
+                      0,
+                      -1270544.7618038643,
+                      -4729523.416653709,
+                      4072612.5998952053,
+                      1};
 
         static_assert(sizeof(t) / sizeof(*t) == 16);
 
-        aiMatrix4x4t<double> transform{
-            t[0], t[4], t[8], t[12],
-            t[1], t[5], t[9], t[13],
-            t[2], t[6], t[10], t[14],
-            t[3], t[7], t[11], t[15]
-        };
+        aiMatrix4x4t<double> transform{t[0], t[4],  t[8],  t[12], t[1],  t[5],
+                                       t[9], t[13], t[2],  t[6],  t[10], t[14],
+                                       t[3], t[7],  t[11], t[15]};
 
         aiVector3d p0_zup{496840, 4420750, 0}; // Y-UP coordinates
-        
+
         auto p0_transformed = transform * p0_zup;
         CONSOLE_EVAL(p0_transformed);
 
-        auto geo = ecef_to_geodetic(p0_transformed.x, p0_transformed.y, p0_transformed.z);
-        CONSOLE("Geodetic: lon=" << geo.lon_deg << " lat=" << geo.lat_deg << " height=" << geo.height);
+        auto geo = ecef_to_geodetic(p0_transformed.x, p0_transformed.y,
+                                    p0_transformed.z);
+        CONSOLE("Geodetic: lon=" << geo.lon_deg << " lat=" << geo.lat_deg
+                                 << " height=" << geo.height);
     }
 }

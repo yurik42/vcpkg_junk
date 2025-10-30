@@ -30,9 +30,11 @@ if(BUILD_TESTING)
      enable_testing()
      include(GoogleTest)
      find_package(GTest REQUIRED)
+     find_package(assimp CONFIG REQUIRED)
 
      add_executable(test_15
          test_mesh_3d_tiles.cpp
+         Cesium3d_meshtoolbox.h
      )
 
      target_link_libraries(
@@ -40,6 +42,7 @@ if(BUILD_TESTING)
          PRIVATE
          GTest::gtest
          GTest::gtest_main
+         assimp::assimp
      )
 
      gtest_discover_tests(test_15)

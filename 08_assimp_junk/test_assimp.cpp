@@ -15,6 +15,7 @@ namespace fs = std::filesystem;
 #include <assimp/Importer.hpp>
 #include <assimp/Logger.hpp>
 #include <assimp/scene.h>
+#include <assimp/version.h>
 
 #if _WIN32
 #define STB_IMAGE_IMPLEMENTATION
@@ -1014,9 +1015,16 @@ TEST_F(AssimpF, meshtoolbox_tile1) {
 
     Assimp::Importer sot;
     aiScene const *model = sot.ReadFile(filename.string().c_str(), 0);
+#if 0
     ASSERT_EQ(nullptr, model);
     EXPECT_STREQ("GLTF: Draco mesh compression not supported.",
                  sot.GetErrorString());
+#else
+    ASSERT_TRUE(model);
+    EXPECT_EQ(34, model->mNumMeshes);
+    EXPECT_EQ(35, model->mNumMaterials);
+    EXPECT_EQ(0, model->mNumTextures);
+#endif
 }
 
 /// @brief Create a scene with a cone
@@ -1213,6 +1221,44 @@ TEST_F(AssimpF, load_glb_point_cloud_no_draco) {
     }
 }
 
+/// @brief The test to reproduce a BUG (?) in Assimp library
+/// @param --gtest_filter=AssimpF.load_glb_mesh_draco
+/// @param  
+TEST_F(AssimpF, load_glb_mesh_draco) {
+    auto filename_glb = test_data("GM21378_read_draco_b3dm/tile_draco.glb");
+
+    ASSERT_TRUE(fs::is_regular_file(filename_glb));
+
+    CONSOLE_EVAL(aiGetVersionMajor());
+    CONSOLE_EVAL(aiGetVersionMinor());
+
+    Assimp::Importer import;
+    auto model = import.ReadFile(filename_glb.string(), 0);
+    ASSERT_TRUE(model) << import.GetErrorString();
+    ASSERT_EQ(1, model->mNumMeshes);
+    EXPECT_EQ(1716651, model->mMeshes[0]->mNumFaces);
+    EXPECT_EQ(1029403, model->mMeshes[0]->mNumVertices);
+}
+
+/// @brief Use tinygltf to load the same file as in AssimpF.load_glb_mesh_draco
+/// @param --gtest_filter=AssimpF.load_glb_mesh_draco_tinygltf
+/// @param
+TEST_F(AssimpF, load_glb_mesh_draco_tinygltf) {
+    auto filename_glb = test_data("GM21378_read_draco_b3dm/tile_draco.glb");
+
+    ASSERT_TRUE(fs::is_regular_file(filename_glb));
+
+    tinygltf::TinyGLTF loader;
+    tinygltf::Model model;
+    std::string err, warn;
+
+    bool success = loader.LoadBinaryFromFile(&model, &err, &warn, filename_glb.string());
+
+    ASSERT_TRUE(success) << "Failed to load GLTF: " << err;
+    EXPECT_TRUE(warn.empty()) << "Warning: " << warn;
+    EXPECT_EQ(1, model.meshes.size());
+    EXPECT_EQ(1, model.nodes.size());
+}
 
 void PrintTo(aiVector3D const &v, std::ostream *os) { *os << v; }
 

@@ -21,11 +21,15 @@ set_property(GLOBAL PROPERTY USE_FOLDERS TRUE)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Boost REQUIRED COMPONENTS 
+find_package(Boost REQUIRED COMPONENTS
     program_options
     filesystem
     geometry
 )
+
+# Enable Draco support in assimp
+# Note: This needs to be set when vcpkg builds assimp, not when we use it
+set(ASSIMP_BUILD_DRACO ON CACHE BOOL "Enable Draco support in assimp" FORCE)
 
 find_package(assimp REQUIRED)
 

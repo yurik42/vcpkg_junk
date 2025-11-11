@@ -1,0 +1,113 @@
+Branch: devel/yurik42/15_mesh_3d_tiles
+Comparison: master...HEAD
+Date: 2025-11-11
+
+Summary of Changes
+==================
+
+This branch adds a new experimental subdirectory (15_mesh_3d_tiles) for Cesium 3D mesh
+tile processing and enhances assimp integration with Draco compression support.
+
+Statistics:
+-----------
+- 24 files changed
+- 1,678 insertions, 5 deletions
+- 6 commits
+
+Major Changes
+=============
+
+1. NEW: 15_mesh_3d_tiles/ Subdirectory
+   -------------------------------------
+   A new standalone project for processing 3D mesh tiles with Cesium 3D Tiles format.
+
+   Key components:
+   - Cesium3d_meshtoolbox.h (520 lines): Comprehensive mesh utilities including:
+     * Box mesh generation with parametric dimensions
+     * Cylinder mesh creation (parametric height/radius)
+     * Point cloud mesh utilities (lidar format)
+     * AABB computation with scene graph transformation support
+     * Scene composition from multiple primitive meshes
+
+   - test_mesh_3d_tiles.cpp (205 lines): GoogleTest test suite with:
+     * Test fixture class (workspace creation, data directory management)
+     * GLB file loading tests (tb_2, tb_3 datasets)
+     * Georeferenced scene generation ("graveyard" test with 1000+ boxes)
+     * AABB verification with transformation matrices
+
+   - Test data files:
+     * data/tb_2/actual.glb (582 KB)
+     * data/tb_3/actual.glb (585 KB)
+     * data/georeferenced_graveyard_scene_actual/ (b3dm tiles, tileset.json)
+
+   - Build configuration:
+     * Standalone CMakeLists.txt with GoogleTest integration
+     * CMakePresets.json (Visual Studio 2022 generator)
+     * CMakeUserPresets.json (multiple platform presets: default, cherry, windows-developmentyk, kestrel)
+     * vcpkg.json with dependencies: fmt, assimp
+     * CLAUDE.md with project-specific build/test instructions
+
+2. ENHANCED: 08_assimp_junk/ - Draco Support
+   ------------------------------------------
+   Added vcpkg overlay port to enable Draco mesh compression in Assimp builds.
+
+   Changes:
+   - vcpkg-overlays/assimp/: Custom port files
+     * portfile.cmake (97 lines): Modified vcpkg port with ASSIMP_BUILD_DRACO=ON
+     * build_fixes.patch (493 lines): Assimp build system patches
+     * vcpkg.json: Port manifest with draco dependency
+     * README.md: Documentation for overlay port usage
+
+   - CMakeLists.txt: Added ASSIMP_BUILD_DRACO cache variable
+
+   - test_assimp.cpp: New test cases
+     * load_glb_mesh_draco: Tests Draco-compressed GLB mesh loading (1.7M faces, 1M+ vertices)
+     * load_glb_mesh_draco_tinygltf: Validates same file with tinygltf library
+     * Updated meshtoolbox_tile1: Changed expectations from failure to success (34 meshes)
+
+   - test_data/GM21378_read_draco_b3dm/tile_draco.glb (5.8 MB): Large Draco test asset
+
+   - CMakePresets.json: Updated VCPKG_OVERLAY_PORTS configuration
+
+   - CLAUDE.md: Updated build instructions with overlay port usage
+
+3. CLEANUP: Build Artifacts
+   -------------------------
+   - Removed vcpkg_installed/ directory from git tracking (build output cleanup)
+
+Commit History
+==============
+b936126 Remove vcpkg_installed/
+66d571b Update 08_assimp_junk/ to build custom assimp
+4a869e0 Add load_tb_xxxx tests
+680d7c5 Add test fixture class mesh_3d_tiles
+9dbf265 Add data/
+266d334 Add 15_mesh_3d_tiles/
+
+Technical Notes
+===============
+- All code follows C++17 standard
+- GoogleTest framework used for unit testing
+- Assimp version compatibility verified (aiGetVersionMajor/Minor)
+- GLB/GLTF binary format support with and without Draco compression
+- Scene graph transformations with double-precision matrix operations
+- Workspace management for test output isolation
+
+Testing Impact
+==============
+New test coverage:
+- 15_mesh_3d_tiles: 4 test cases (basic setup, GLB loading x2, scene generation)
+- 08_assimp_junk: 2 new Draco-related tests, 1 updated expectation
+
+Build System Impact
+===================
+- New vcpkg feature would need to be added to root vcpkg.json for 15_mesh_3d_tiles
+- Overlay port mechanism requires VCPKG_OVERLAY_PORTS cmake variable
+- Binary test data adds ~7 MB to repository size
+
+Next Steps
+==========
+- Consider adding 15_mesh_3d_tiles to root CMakeLists.txt as BUILD_15 option
+- Add corresponding vcpkg.json feature "15-mesh-3d-tiles" with assimp, fmt dependencies
+- Document Draco overlay port usage in root README.md or CLAUDE.md
+- Consider moving Cesium3d_meshtoolbox.h to shared location if reused across projects
